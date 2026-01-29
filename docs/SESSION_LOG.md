@@ -6,9 +6,9 @@ Track progress across Claude Code sessions.
 
 ## Current Status
 
-**Phase:** 0 (Not started)
-**Last Session:** N/A
-**Next Action:** Start Phase 1 - Project Scaffold
+**Phase:** 2 (Complete)
+**Last Session:** 2026-01-29
+**Next Action:** Start Phase 3 - File Selection Heuristics
 
 ---
 
@@ -40,206 +40,105 @@ Track progress across Claude Code sessions.
 
 ---
 
-### Session 1: [Phase 1 - Scaffold]
-**Date:** YYYY-MM-DD
-**Duration:** 
+### Session 1: Phase 1 & 2 - Scaffold + GitHub Integration
+**Date:** 2026-01-29
+**Duration:** ~1 session
 
 #### Goal
-Create Next.js 14 project with Prisma SQLite
+Create Next.js 14 project with Prisma SQLite + GitHub API integration
 
-#### Commands Given
-```
-[paste prompts here]
-```
+#### Phase 1 Completed
+- [x] Next.js 14 project created with App Router
+- [x] TypeScript enabled
+- [x] Tailwind CSS enabled
+- [x] ESLint enabled
+- [x] Prisma configured with SQLite
+- [x] RepoAssessment model created
+- [x] Prisma client generated
+- [x] Database pushed (dev.db created)
+- [x] Home page with URL input form
+- [x] `npm run dev` works
+- [x] `npm run lint` passes
 
-#### Completed
-- [ ] Next.js project created
-- [ ] Prisma configured
-- [ ] RepoAssessment model created
-- [ ] `npm run dev` works
-- [ ] `npx prisma db push` works
+#### Phase 2 Completed
+- [x] `parseGitHubUrl()` - handles various URL formats
+- [x] `getRepoMetadata()` - fetches default branch & description
+- [x] `getLatestCommit()` - gets HEAD commit SHA
+- [x] `getTree()` - recursive file tree
+- [x] `getFileContent()` - fetch file contents (ready for Phase 4)
+- [x] `GitHubError` class with rate limit handling
+- [x] API route: `GET /api/repo/[owner]/[name]/tree`
 
 #### Files Created/Modified
-- 
 
-#### Issues
-- 
+**Phase 1:**
+- `package.json` - Project dependencies
+- `tsconfig.json` - TypeScript configuration
+- `next.config.mjs` - Next.js configuration
+- `tailwind.config.ts` - Tailwind configuration
+- `postcss.config.mjs` - PostCSS configuration
+- `.eslintrc.json` - ESLint configuration
+- `next-env.d.ts` - Next.js TypeScript declarations
+- `prisma/schema.prisma` - Database schema with RepoAssessment model
+- `prisma.config.ts` - Prisma 7.x configuration
+- `prisma/dev.db` - SQLite database
+- `app/layout.tsx` - Root layout
+- `app/page.tsx` - Home page with URL input form
+- `app/globals.css` - Global styles with Tailwind
+- `app/generated/prisma/` - Generated Prisma client
+- `lib/prisma.ts` - Prisma singleton with libsql adapter
+- `public/next.svg` - Next.js logo
+- `public/vercel.svg` - Vercel logo
+
+**Phase 2:**
+- `lib/github.ts` - GitHub API utilities
+- `app/api/repo/[owner]/[name]/tree/route.ts` - Tree API endpoint
+
+#### Issues Encountered
+1. **npx/npm output not visible in Git Bash** - Resolved by using PowerShell for npm commands
+2. **Prisma 7.x breaking changes** - Required `@prisma/adapter-libsql` for SQLite connections (new in Prisma 7.x)
+3. **Prisma client import path** - Client generated to `app/generated/prisma/client` instead of `@prisma/client`
+
+#### Dependencies Added
+- `next@14.2.21`
+- `react@^18`, `react-dom@^18`
+- `prisma@^7.3.0`, `@prisma/client@^7.3.0`
+- `@prisma/adapter-libsql`, `@libsql/client`
+- `typescript@^5`
+- `tailwindcss@^3.4.1`
+- `eslint@^8`, `eslint-config-next@14.2.21`
 
 #### Next Session
-- 
+- Start Phase 3: File Selection Heuristics
+- Create `lib/heuristics.ts` with:
+  - `selectFiles(tree, maxFiles)` function
+  - `detectStack(tree)` function
+  - Tier-based file weighting (0-4)
+  - Ignore patterns implementation
 
 ---
 
-### Session 2: [Phase 2 - GitHub Integration]
+### Session 2: [Phase 3 - Heuristics]
 **Date:** YYYY-MM-DD
-**Duration:** 
-
-#### Goal
-GitHub API client and tree endpoint
-
-#### Commands Given
-```
-[paste prompts here]
-```
-
-#### Completed
-- [ ] parseGitHubUrl works
-- [ ] getRepoMetadata works
-- [ ] getLatestCommit works
-- [ ] getTree works
-- [ ] API route returns tree
-
-#### Files Created/Modified
-- 
-
-#### Issues
-- 
-
-#### Next Session
-- 
-
----
-
-### Session 3: [Phase 3 - Heuristics]
-**Date:** YYYY-MM-DD
-**Duration:** 
+**Duration:**
 
 #### Goal
 File selection logic
 
-#### Completed
-- [ ] selectFiles works
-- [ ] detectStack works
-- [ ] Tier weights applied
-- [ ] Caps enforced
+#### Planned Tasks
+- [ ] Create `lib/heuristics.ts`
+- [ ] Implement file tier weights (0-4)
+- [ ] Implement ignore patterns (node_modules, dist, etc.)
+- [ ] Implement stack detection (Next.js, Python, etc.)
+- [ ] `selectFiles(tree, maxFiles=25)` returns selected files + detected stack
+- [ ] Unit tests for heuristics
 
-#### Files Created/Modified
-- 
-
----
-
-### Session 4: [Phase 4 - Content Fetching]
-**Date:** YYYY-MM-DD
-**Duration:** 
-
-#### Goal
-Fetch and chunk file contents
-
-#### Completed
-- [ ] getFileContent works
-- [ ] chunkFile works
-- [ ] citationId generated
-- [ ] fetchAllFiles orchestrated
-
-#### Files Created/Modified
-- 
-
----
-
-### Session 5: [Phase 5 - OpenAI Pipeline]
-**Date:** YYYY-MM-DD
-**Duration:** 
-
-#### Goal
-LLM summaries and rubric assessment
-
-#### Completed
-- [ ] summarizeFile works
-- [ ] runRubricAssessment works
-- [ ] Schema validation works
-- [ ] Variability rule enforced
-
-#### Files Created/Modified
-- 
-
----
-
-### Session 6: [Phase 6 - Database & API]
-**Date:** YYYY-MM-DD
-**Duration:** 
-
-#### Goal
-Full API endpoints
-
-#### Completed
-- [ ] POST /api/analyze works
-- [ ] GET /api/assessments works
-- [ ] GET /api/assessments/[id] works
-- [ ] Data persisted correctly
-
-#### Files Created/Modified
-- 
-
----
-
-### Session 7: [Phase 7 - UI Input & Picker]
-**Date:** YYYY-MM-DD
-**Duration:** 
-
-#### Goal
-Home page and file picker
-
-#### Completed
-- [ ] URL input works
-- [ ] File tree renders
-- [ ] Checkboxes work
-- [ ] Analysis triggers
-
-#### Files Created/Modified
-- 
-
----
-
-### Session 8: [Phase 8 - Report View]
-**Date:** YYYY-MM-DD
-**Duration:** 
-
-#### Goal
-Display assessment report
-
-#### Completed
-- [ ] Classification badge
-- [ ] Score cards
-- [ ] Task table
-- [ ] Citations link to GitHub
-
-#### Files Created/Modified
-- 
-
----
-
-### Session 9: [Phase 9 - Compare View]
-**Date:** YYYY-MM-DD
-**Duration:** 
-
-#### Goal
-Compare two assessments
-
-#### Completed
-- [ ] Side-by-side works
-- [ ] Score deltas shown
-- [ ] Classification changes visible
-
-#### Files Created/Modified
-- 
-
----
-
-### Session 10: [Phase 10 - Polish]
-**Date:** YYYY-MM-DD
-**Duration:** 
-
-#### Goal
-Error handling and UX
-
-#### Completed
-- [ ] Loading states
-- [ ] Error boundaries
-- [ ] Mobile responsive
-- [ ] Rate limit handling
-
-#### Files Created/Modified
-- 
+#### Acceptance Criteria
+- [ ] README.md always included
+- [ ] package.json included for JS projects
+- [ ] node_modules ignored
+- [ ] Returns detected stack array
+- [ ] Respects maxFiles limit
 
 ---
 
@@ -247,8 +146,8 @@ Error handling and UX
 
 | Milestone | Target | Actual |
 |-----------|--------|--------|
-| Scaffold working | Session 1 | |
-| GitHub API working | Session 2 | |
+| Scaffold working | Session 1 | Session 1 |
+| GitHub API working | Session 2 | Session 1 |
 | First LLM call | Session 5 | |
 | Full analysis working | Session 6 | |
 | UI complete | Session 8 | |
@@ -260,10 +159,13 @@ Error handling and UX
 
 | Issue | Priority | Status | Resolution |
 |-------|----------|--------|------------|
-| | | | |
+| Next.js security warning | Low | Open | Upgrade to patched version when available |
+| ESLint deprecation warnings | Low | Open | Will auto-resolve with future updates |
 
 ---
 
 ## Notes
 
-Add general notes, learnings, or decisions here.
+- Prisma 7.x requires driver adapters - using `@prisma/adapter-libsql` for SQLite
+- npm/npx commands need to run via PowerShell on this Windows/Git Bash environment
+- GitHub API rate limits: 60/hr unauthenticated, 5000/hr with token

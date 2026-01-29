@@ -1,0 +1,27 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model RepoAssessment {
+  id                String   @id @default(uuid())
+  repoUrl           String
+  owner             String
+  name              String
+  defaultBranch     String
+  commitSha         String
+  selectedPathsJson String
+  fileDigestsJson   String
+  rubricJson        String
+  createdAt         DateTime @default(now())
+
+  @@index([owner, name])
+  @@index([commitSha])
+}

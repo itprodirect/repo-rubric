@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/reporubric.schema.json",
+  "title": "RepoRubric Assessment",
+  "type": "object",
+  "required": [
+    "meta",
+    "classification",
+    "scores",
+    "outcomes",
+    "tasks",
+    "execution_modes",
+    "guardrails",
+    "pilot",
+    "risks",
+    "citations"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["repo_url", "owner", "repo", "commit_sha", "default_branch", "analyzed_paths"],
+      "properties": {
+        "repo_url": { "type": "string" },
+        "owner": { "type": "string" },
+        "repo": { "type": "string" },
+        "commit_sha": { "type": "string" },
+        "default_branch": { "type": "string" },
+        "detected_stack": { "type": "array", "items": { "type": "string" } },
+        "analyzed_paths": { "type": "array", "items": { "type": "string" } },
+        "content_caps": {
+          "type": "object",
+          "properties": {
+            "max_files": { "type": "integer" },
+            "max_total_chars": { "type": "integer" },
+            "truncated": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "classification": {
+      "type": "string",
+      "enum": ["A_NOT_AGENTIC", "B_LLM_ASSIST", "C_TASK_AGENTS", "D_AGENT_ORCHESTRATION"]
+    },
+
+    "scores": {
+      "type": "object",
+      "required": [
+        "variability",
+        "strategic_importance",
+        "operational_impact",
+        "integration_readiness",
+        "blast_radius_risk",
+        "confidence"
+      ],
+      "properties": {
+        "variability": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "strategic_importance": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "operational_impact": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "integration_readiness": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "blast_radius_risk": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+
+    "outcomes": {
+      "type": "object",
+      "required": ["enterprise_outcome", "workflow_outcome", "kpis"],
+      "properties": {
+        "enterprise_outcome": { "type": "string" },
+        "workflow_outcome": { "type": "string" },
+        "kpis": {
+          "type": "object",
+          "required": ["efficiency", "quality", "business_impact", "risk_compliance"],
+          "properties": {
+            "efficiency": { "type": "array", "items": { "type": "string" } },
+            "quality": { "type": "array", "items": { "type": "string" } },
+            "business_impact": { "type": "array", "items": { "type": "string" } },
+            "risk_compliance": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "task_id",
+          "name",
+          "current_actor",
+          "inputs",
+          "outputs",
+          "scores",
+          "recommendation",
+          "rationale",
+          "citations"
+        ],
+        "properties": {
+          "task_id": { "type": "string" },
+          "name": { "type": "string" },
+          "current_actor": { "type": "string" },
+          "inputs": { "type": "array", "items": { "type": "string" } },
+          "outputs": { "type": "array", "items": { "type": "string" } },
+          "scores": {
+            "type": "object",
+            "required": ["variability", "criticality", "risk"],
+            "properties": {
+              "variability": { "type": "integer", "minimum": 1, "maximum": 5 },
+              "criticality": { "type": "integer", "minimum": 1, "maximum": 5 },
+              "risk": { "type": "integer", "minimum": 1, "maximum": 5 }
+            },
+            "additionalProperties": false
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": ["RULES_AUTOMATION", "LLM_ASSIST", "TASK_AGENT", "HUMAN"]
+          },
+          "rationale": { "type": "string" },
+          "citations": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "execution_modes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task_id", "mode", "why", "constraints", "citations"],
+        "properties": {
+          "task_id": { "type": "string" },
+          "mode": { "type": "string", "enum": ["STATIC", "ADAPTIVE", "COLLABORATIVE"] },
+          "why": { "type": "string" },
+          "constraints": { "type": "array", "items": { "type": "string" } },
+          "citations": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "guardrails": {
+      "type": "object",
+      "required": ["strategic", "operational", "implementation"],
+      "properties": {
+        "strategic": { "type": "array", "items": { "type": "string" } },
+        "operational": { "type": "array", "items": { "type": "string" } },
+        "implementation": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+
+    "pilot": {
+      "type": "object",
+      "required": ["recommended_first_task_id", "baseline", "success_thresholds", "sandbox_plan", "rollback_plan", "monitoring"],
+      "properties": {
+        "recommended_first_task_id": { "type": "string" },
+        "baseline": { "type": "array", "items": { "type": "string" } },
+        "success_thresholds": { "type": "array", "items": { "type": "string" } },
+        "sandbox_plan": { "type": "array", "items": { "type": "string" } },
+        "rollback_plan": { "type": "array", "items": { "type": "string" } },
+        "monitoring": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+
+    "risks": {
+      "type": "object",
+      "required": ["key_risks", "unknowns", "assumptions"],
+      "properties": {
+        "key_risks": { "type": "array", "items": { "type": "string" } },
+        "unknowns": { "type": "array", "items": { "type": "string" } },
+        "assumptions": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "path", "commit_sha", "line_start", "line_end", "url"],
+        "properties": {
+          "id": { "type": "string" },
+          "path": { "type": "string" },
+          "commit_sha": { "type": "string" },
+          "line_start": { "type": "integer", "minimum": 1 },
+          "line_end": { "type": "integer", "minimum": 1 },
+          "url": { "type": "string" },
+          "note": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

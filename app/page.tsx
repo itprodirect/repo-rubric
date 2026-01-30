@@ -36,6 +36,7 @@ export default function Home() {
     isLimited: false,
     retryAfter: 0,
   });
+  const [quickMode, setQuickMode] = useState(false);
 
   // Countdown timer for rate limit
   useEffect(() => {
@@ -78,6 +79,14 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // If not in quick mode, navigate to file picker
+    if (!quickMode) {
+      router.push(`/repo?url=${encodeURIComponent(repoUrl)}`);
+      return;
+    }
+
+    // Quick mode: run analysis directly with heuristics
     setIsLoading(true);
     setProgress("Parsing repository URL...");
 
@@ -149,6 +158,19 @@ export default function Home() {
                 disabled={isLoading}
               />
             </div>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={quickMode}
+                onChange={(e) => setQuickMode(e.target.checked)}
+                disabled={isLoading}
+                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Skip file selection (use auto-detect)
+              </span>
+            </label>
 
             {rateLimit.isLimited && (
               <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
@@ -227,7 +249,9 @@ export default function Home() {
                 ? "Analyzing..."
                 : rateLimit.isLimited
                   ? `Wait ${formatTime(rateLimit.retryAfter)}`
-                  : "Analyze Repository"}
+                  : quickMode
+                    ? "Quick Analyze"
+                    : "Select Files & Analyze"}
             </button>
           </form>
         </div>

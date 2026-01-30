@@ -69,6 +69,35 @@ export default async function ReportPage({ params }: PageProps) {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+        {/* Truncation Warning */}
+        {rubric.meta?.content_caps?.truncated && (
+          <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg
+                className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <div>
+                <p className="font-medium text-amber-800 dark:text-amber-200">
+                  Analysis Truncated
+                </p>
+                <p className="text-sm text-amber-600 dark:text-amber-400">
+                  Some file content was truncated due to size limits. Consider selecting fewer or smaller files for a more complete analysis.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Scores Grid */}
         <section>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -351,6 +380,37 @@ export default async function ReportPage({ params }: PageProps) {
           </h2>
           <CitationList citations={rubric.citations} />
         </section>
+
+        {/* Analyzed Files */}
+        {rubric.meta?.analyzed_paths && rubric.meta.analyzed_paths.length > 0 && (
+          <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Files Analyzed ({rubric.meta.analyzed_paths.length})
+            </h2>
+            <div className="max-h-64 overflow-y-auto">
+              <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                {rubric.meta.analyzed_paths.map((path: string) => (
+                  <li key={path} className="flex items-center gap-2">
+                    <svg
+                      className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span className="font-mono">{path}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
 
         {/* Meta Info */}
         <section className="text-sm text-gray-500 dark:text-gray-400">

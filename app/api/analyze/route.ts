@@ -16,14 +16,18 @@ export const maxDuration = 300; // 5 minutes for Vercel
 
 interface AnalyzeRequest {
   repoUrl: string;
-  extraPaths?: string[];
+  extraPaths?: string[];      // Additive to heuristics
+  selectedPaths?: string[];   // Override: analyze EXACTLY these (bypasses heuristics)
 }
 
 export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const body = (await request.json()) as AnalyzeRequest;
-    const { repoUrl, extraPaths = [] } = body;
+    const { repoUrl, extraPaths = [], selectedPaths } = body;
+
+    // Determine if we're in override mode (user selected specific files)
+    const isOverrideMode = selectedPaths && selectedPaths.length > 0;
 
     if (!repoUrl) {
       return NextResponse.json(
@@ -50,43 +54,57 @@ export async function POST(request: NextRequest) {
     const commitSha = await getLatestCommit(owner, repo, metadata.defaultBranch);
 
     // Check if we already have an assessment for this commit
-    const existing = await prisma.repoAssessment.findFirst({
-      where: {
-        owner,
-        name: repo,
-        commitSha,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    if (existing) {
-      return NextResponse.json({
-        assessmentId: existing.id,
-        cached: true,
-        rubricJson: JSON.parse(existing.rubricJson),
+    // Skip cache when user has selected specific files (override mode)
+    if (!isOverrideMode) {
+      const existing = await prisma.repoAssessment.findFirst({
+        where: {
+          owner,
+          name: repo,
+          commitSha,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
       });
+
+      if (existing) {
+        return NextResponse.json({
+          assessmentId: existing.id,
+          cached: true,
+          rubricJson: JSON.parse(existing.rubricJson),
+        });
+      }
     }
 
     // Step 4: Get file tree
     const treeResult = await getTree(owner, repo, commitSha);
 
-    // Step 5: Select files using heuristics
+    // Step 5: Select files using heuristics OR use override paths
     const selection = selectFiles(treeResult.tree);
 
-    // Add extra paths if provided
-    const extraNodes = extraPaths
-      .map((path) => treeResult.tree.find((n) => n.path === path))
-      .filter(Boolean);
+    let uniquePaths: string[];
 
-    const selectedPaths = [
-      ...selection.selected.map((s) => s.path),
-      ...extraNodes.map((n) => n!.path),
-    ];
+    if (isOverrideMode) {
+      // Override mode: analyze EXACTLY the paths provided
+      // Validate that paths exist in tree
+      const validPaths = selectedPaths!.filter((path) =>
+        treeResult.tree.some((n) => n.path === path && n.type === "blob")
+      );
+      uniquePaths = validPaths;
+    } else {
+      // Heuristic mode: use selection + extraPaths
+      const extraNodes = extraPaths
+        .map((path) => treeResult.tree.find((n) => n.path === path))
+        .filter(Boolean);
 
-    // Deduplicate
-    const uniquePaths = Array.from(new Set(selectedPaths));
+      const pathsFromHeuristics = [
+        ...selection.selected.map((s) => s.path),
+        ...extraNodes.map((n) => n!.path),
+      ];
+
+      // Deduplicate
+      uniquePaths = Array.from(new Set(pathsFromHeuristics));
+    }
 
     // Step 6: Fetch and chunk file contents
     const filesToFetch = uniquePaths.map((path) => {

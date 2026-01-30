@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface Assessment {
@@ -11,6 +11,11 @@ interface Assessment {
   commitSha: string;
   createdAt: string;
   classification: string;
+}
+
+interface RateLimitState {
+  isLimited: boolean;
+  retryAfter: number;
 }
 
 const CLASSIFICATION_COLORS: Record<string, string> = {
@@ -27,6 +32,36 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
   const [recentAssessments, setRecentAssessments] = useState<Assessment[]>([]);
+  const [rateLimit, setRateLimit] = useState<RateLimitState>({
+    isLimited: false,
+    retryAfter: 0,
+  });
+
+  // Countdown timer for rate limit
+  useEffect(() => {
+    if (!rateLimit.isLimited || rateLimit.retryAfter <= 0) return;
+
+    const timer = setInterval(() => {
+      setRateLimit((prev) => {
+        const newRetryAfter = prev.retryAfter - 1;
+        if (newRetryAfter <= 0) {
+          return { isLimited: false, retryAfter: 0 };
+        }
+        return { ...prev, retryAfter: newRetryAfter };
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [rateLimit.isLimited, rateLimit.retryAfter]);
+
+  const formatTime = useCallback((seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) {
+      return `${mins}m ${secs}s`;
+    }
+    return `${secs}s`;
+  }, []);
 
   useEffect(() => {
     // Fetch recent assessments
@@ -60,9 +95,11 @@ export default function Home() {
       if (!response.ok) {
         if (response.status === 429) {
           const retryAfter = data.retryAfter || 60;
-          throw new Error(
-            `Rate limit exceeded. Please wait ${retryAfter} seconds and try again.`
-          );
+          setRateLimit({ isLimited: true, retryAfter });
+          setError(null);
+          setIsLoading(false);
+          setProgress(null);
+          return;
         }
         throw new Error(data.error || "Analysis failed");
       }
@@ -113,6 +150,38 @@ export default function Home() {
               />
             </div>
 
+            {rateLimit.isLimited && (
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <svg
+                    className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div>
+                    <p className="text-yellow-800 dark:text-yellow-200 font-medium">
+                      Rate Limit Reached
+                    </p>
+                    <p className="text-yellow-600 dark:text-yellow-400 text-sm">
+                      Please wait{" "}
+                      <span className="font-mono font-bold">
+                        {formatTime(rateLimit.retryAfter)}
+                      </span>{" "}
+                      before trying again
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {error && (
               <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                 <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
@@ -151,10 +220,14 @@ export default function Home() {
 
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              disabled={isLoading || rateLimit.isLimited}
+              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              {isLoading ? "Analyzing..." : "Analyze Repository"}
+              {isLoading
+                ? "Analyzing..."
+                : rateLimit.isLimited
+                  ? `Wait ${formatTime(rateLimit.retryAfter)}`
+                  : "Analyze Repository"}
             </button>
           </form>
         </div>

@@ -24,13 +24,14 @@ export async function GET(
     const commitSha = requestedSha || await getLatestCommit(owner, name, metadata.defaultBranch);
 
     // Get tree
-    const tree = await getTree(owner, name, commitSha);
+    const treeResult = await getTree(owner, name, commitSha);
 
     return NextResponse.json({
-      tree,
+      tree: treeResult.tree,
       defaultBranch: metadata.defaultBranch,
       description: metadata.description,
       commitSha,
+      truncated: treeResult.truncated,
     });
   } catch (error) {
     if (error instanceof GitHubError) {

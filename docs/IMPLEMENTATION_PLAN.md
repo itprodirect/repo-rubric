@@ -1,337 +1,334 @@
-# Implementation Plan
+# Implementation Plan (Codex-Informed)
 
-Step-by-step build order for Claude Code sessions. Each phase can be a single session.
+Prioritized build order based on 4-run Codex analysis. Focus: ship the end-to-end loop first.
+
+---
 
 ## Pre-flight Checklist
 
-Before starting any phase, ensure:
-- [ ] Node.js 18+ installed
-- [ ] Git initialized
-- [ ] Working directory is repo-rubric
-
-## Phase 1: Project Scaffold
-
-**Goal:** Basic Next.js app with Prisma SQLite running
-
-**Commands for Claude Code:**
+Before any session:
+```bash
+cd repo-rubric
+git status              # Clean working tree?
+npm run dev             # Does it start?
+npx prisma generate     # Does Prisma work?
 ```
-Create Next.js 14 App Router project with:
-- TypeScript
-- Tailwind CSS
-- ESLint
-- src/ directory: NO (use app/ at root)
-- App Router: YES
-
-Add Prisma with SQLite. Create schema with RepoAssessment model.
-```
-
-**Expected files:**
-```
-app/
-  layout.tsx
-  page.tsx
-  globals.css
-prisma/
-  schema.prisma
-.env.example
-package.json
-tailwind.config.ts
-tsconfig.json
-```
-
-**Acceptance criteria:**
-- [ ] `npm run dev` starts server at localhost:3000
-- [ ] `npx prisma generate` succeeds
-- [ ] `npx prisma db push` creates dev.db
-- [ ] Home page renders
-
-**Session log entry:** Record date, files created, any issues
 
 ---
 
-## Phase 2: GitHub Integration
+## P0: Fix Blockers (Session 3)
 
-**Goal:** Parse URLs, fetch repo metadata, fetch tree
+**Time estimate:** 30-45 minutes
 
-**Commands for Claude Code:**
+These issues will cause problems if not fixed now:
+
+### 1. Prisma Schema Fix
+
+**File:** `prisma/schema.prisma`
+
+Ensure datasource has URL from env:
+```prisma
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model RepoAssessment {
+  id                String   @id @default(uuid())
+  repoUrl           String
+  owner             String
+  name              String
+  defaultBranch     String
+  commitSha         String
+  selectedPathsJson String
+  fileDigestsJson   String
+  rubricJson        String
+  createdAt         DateTime @default(now())
+
+  @@index([owner, name])
+  @@index([commitSha])
+}
 ```
-Create lib/github.ts with:
-- parseGitHubUrl(url) -> {owner, repo} or throw
-- getRepoMetadata(owner, repo) -> {defaultBranch, description}
-- getLatestCommit(owner, repo, branch) -> sha
-- getTree(owner, repo, sha) -> TreeNode[]
 
-Use fetch with optional GITHUB_TOKEN from env.
-Handle rate limits (return 429 response).
+**File:** `.env.example`
+```
+DATABASE_URL="file:./dev.db"
+OPENAI_API_KEY=sk-...
+GITHUB_TOKEN=
 ```
 
-**Add API route:**
-```
-app/api/repo/[owner]/[name]/tree/route.ts
-- GET handler
-- Returns tree + metadata + commit SHA
+### 2. Route Params Typing
+
+**Check all files matching:** `app/api/**/route.ts`
+
+Wrong:
+```typescript
+{ params }: { params: Promise<{ id: string }> }
 ```
 
-**Acceptance criteria:**
-- [ ] parseGitHubUrl handles various URL formats
-- [ ] API route returns tree for public repo
-- [ ] Proper error for invalid URLs
-- [ ] Test with: https://github.com/vercel/next.js
+Correct:
+```typescript
+{ params }: { params: { id: string } }
+```
+
+### 3. GitHub URL Validation
+
+**File:** `lib/github.ts`
+
+```typescript
+const ALLOWED_HOSTS = ["github.com", "www.github.com"];
+
+export function parseGitHubUrl(urlString: string): { owner: string; repo: string } {
+  let url: URL;
+  try {
+    url = new URL(urlString);
+  } catch {
+    throw new Error("Invalid URL format");
+  }
+  
+  if (!ALLOWED_HOSTS.includes(url.hostname)) {
+    throw new Error(`Must be a GitHub URL. Got: ${url.hostname}`);
+  }
+  
+  const parts = url.pathname.split("/").filter(Boolean);
+  if (parts.length < 2) {
+    throw new Error("Invalid GitHub URL. Expected: github.com/owner/repo");
+  }
+  
+  return {
+    owner: parts[0],
+    repo: parts[1].replace(/\.git$/, "")
+  };
+}
+```
+
+### 4. Tree Truncation
+
+**File:** `lib/github.ts`
+
+```typescript
+export interface TreeResult {
+  tree: TreeNode[];
+  sha: string;
+  truncated: boolean;
+}
+
+export async function getTree(
+  owner: string,
+  repo: string,
+  sha: string
+): Promise<TreeResult> {
+  const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${sha}?recursive=1`;
+  const res = await fetch(url, { headers: getHeaders() });
+  
+  if (!res.ok) {
+    const text = await res.text();
+    throw new GitHubError(res.status, text);
+  }
+  
+  const data = await res.json();
+  return {
+    tree: data.tree ?? [],
+    sha: data.sha,
+    truncated: data.truncated ?? false
+  };
+}
+```
+
+### 5. Layout Metadata
+
+**File:** `app/layout.tsx`
+
+```typescript
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "RepoRubric",
+  description: "Agentic Workflow Assessment for GitHub Repositories",
+};
+```
+
+### P0 Verification
+
+```bash
+# All must pass
+npm install
+npx prisma generate
+npx prisma db push
+npm run build
+npm run dev
+
+# Manual check
+# - Browser title shows "RepoRubric"
+# - Tree endpoint works for public repo
+```
+
+**Commit:** `fix(p0): prisma config, route typing, github validation, truncation`
 
 ---
 
-## Phase 3: File Selection Heuristics
+## P1: MVP Loop (Sessions 4-6)
 
-**Goal:** Automatically select relevant files from tree
+**Time estimate:** 2-4 hours total
 
-**Commands for Claude Code:**
-```
-Create lib/heuristics.ts implementing:
-- File selection weights (Tier 0, 1, 2)
-- Ignore patterns (node_modules, dist, etc.)
-- Stack detection (Next.js, Python, etc.)
-- selectFiles(tree, maxFiles=25) -> {selected, detected_stack}
+### Session 4: Analysis Pipeline
 
-See docs/FILE_HEURISTICS.md for full spec.
-```
+**Goal:** `/api/analyze` returns valid rubric JSON
 
-**Acceptance criteria:**
-- [ ] README.md always included
-- [ ] package.json included for JS projects
-- [ ] node_modules ignored
-- [ ] Returns detected stack array
-- [ ] Respects maxFiles limit
+**Create files:**
 
----
+1. `lib/heuristics.ts` - File selection
+2. `lib/chunker.ts` - Content chunking  
+3. `lib/llm.ts` - OpenAI calls
+4. `lib/validate.ts` - Schema validation
+5. `app/api/analyze/route.ts` - Main endpoint
 
-## Phase 4: Content Fetching & Chunking
-
-**Goal:** Fetch file contents, chunk large files with line tracking
-
-**Commands for Claude Code:**
-```
-Add to lib/github.ts:
-- getFileContent(owner, repo, path, sha) -> {content, size}
-
-Create lib/chunker.ts:
-- chunkFile(content, path, sha, maxLines=300) -> Chunk[]
-- Chunk = {path, sha, lineStart, lineEnd, content, citationId}
-- citationId = "CIT-" + hash(path+sha+lineStart)
-
-Create lib/fetcher.ts:
-- fetchAllFiles(owner, repo, sha, paths, maxChars=250000)
-- Returns chunks array + warnings if truncated
+**Acceptance:**
+```bash
+curl -X POST http://localhost:3000/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"repoUrl":"https://github.com/sindresorhus/is"}'
+  
+# Returns: { assessmentId: "...", ... }
 ```
 
-**Acceptance criteria:**
-- [ ] Large files split into chunks
-- [ ] Each chunk has line range
-- [ ] Total content respects maxChars
-- [ ] citationId is deterministic
+### Session 5: UI Integration
 
----
+**Goal:** Home page → Analysis → Report page
 
-## Phase 5: OpenAI Pipeline
+**Modify files:**
 
-**Goal:** File summaries + rubric assessment with strict JSON
+1. `app/page.tsx` - Add form submission, progress states
+2. `app/report/[id]/page.tsx` - Create report view
+3. `components/ScoreCard.tsx` - Reusable score display
+4. `components/TaskTable.tsx` - Task breakdown
+5. `components/CitationLink.tsx` - GitHub links
 
-**Commands for Claude Code:**
-```
-Create lib/llm.ts:
-- summarizeFile(chunk) -> FileSummary
-- runRubricAssessment(metadata, summaries) -> RubricOutput
+**Acceptance:**
+- Paste URL → see progress → land on report
+- Report shows classification, scores, tasks
+- Citations link to correct GitHub files
 
-Use OpenAI Responses API with:
-- response_format: { type: "json_schema", json_schema: {...} }
-- Include the full schema from schemas/reporubric.schema.json
+### Session 6: Polish MVP
 
-Create lib/schema.ts:
-- validateRubric(json) -> {valid, errors}
-- Load schema from file
-
-If validation fails:
-- Dev mode: return model output + errors
-- Prod mode: throw error
-```
-
-**Prompt structure for rubric:**
-```
-System: You assess GitHub repositories against an agentic workflow rubric.
-You MUST cite sources for every important claim using the provided citation IDs.
-
-User:
-## Repository
-{metadata}
-
-## Detected Stack
-{stack}
-
-## File Summaries
-{summaries with citation IDs}
-
-## Instructions
-Produce a rubric assessment. Rules:
-- If Variability <= 2, default to NOT_AGENTIC unless justified
-- Every claim needs at least one citation
-- Include concrete KPIs and pilot plan
-```
-
-**Acceptance criteria:**
-- [ ] File summaries generated
-- [ ] Rubric output matches schema exactly
-- [ ] Citations reference valid chunk IDs
-- [ ] Variability rule enforced
-
----
-
-## Phase 6: Database & API
-
-**Goal:** Save/load assessments, full analyze endpoint
-
-**Commands for Claude Code:**
-```
-Create app/api/analyze/route.ts:
-- POST handler
-- Orchestrates: parse URL -> fetch tree -> select files -> fetch content -> LLM -> save
-- Returns {assessmentId, rubricJson}
-
-Create app/api/assessments/route.ts:
-- GET ?repoUrl= returns list for that repo
-- GET ?all returns recent 20
-
-Create app/api/assessments/[id]/route.ts:
-- GET returns single assessment
-```
-
-**Acceptance criteria:**
-- [ ] POST /api/analyze returns valid rubric
-- [ ] Assessment saved to database
-- [ ] Can retrieve by ID
-- [ ] Can list by repo URL
-
----
-
-## Phase 7: UI - Input & File Picker
-
-**Goal:** Home page input, repo page with file picker
-
-**Commands for Claude Code:**
-```
-Update app/page.tsx:
-- URL input field
-- Analyze button
-- Recent assessments list (optional)
-
-Create app/repo/page.tsx:
-- Load tree via API
-- File picker with checkboxes
-- Pre-check heuristic selections
-- "Analyze" button
-- Loading states
-```
-
-**Acceptance criteria:**
-- [ ] Can paste URL and proceed
-- [ ] File tree renders with checkboxes
-- [ ] Default selections pre-checked
-- [ ] Can add/remove files manually
-- [ ] Analysis triggers and redirects to report
-
----
-
-## Phase 8: UI - Report View
-
-**Goal:** Display full rubric assessment
-
-**Commands for Claude Code:**
-```
-Create app/report/[id]/page.tsx:
-- Load assessment by ID
-- Render all rubric sections
-
-Components needed:
-- ClassificationBadge (A/B/C/D with colors)
-- ScoreCard (label + 1-5 score)
-- TaskTable (with recommendation column)
-- GuardrailsChecklist
-- PilotPlan
-- CitationLink (renders GitHub URL)
-```
-
-**Acceptance criteria:**
-- [ ] Classification displayed prominently
-- [ ] All 5+ scores visible
-- [ ] Task table shows all tasks
-- [ ] Citations are clickable links to GitHub
-- [ ] Guardrails and pilot plan readable
-
----
-
-## Phase 9: Compare View
-
-**Goal:** Compare two assessments for same repo
-
-**Commands for Claude Code:**
-```
-Create app/compare/page.tsx:
-- Query params: ?a={id}&b={id}
-- Load both assessments
-- Show:
-  - Classification change (if any)
-  - Score deltas
-  - New/removed tasks
-  - Changed recommendations
-```
-
-**Acceptance criteria:**
-- [ ] Side-by-side or diff view works
-- [ ] Score changes highlighted
-- [ ] Classification changes obvious
-- [ ] Links back to full reports
-
----
-
-## Phase 10: Polish & Edge Cases
-
-**Goal:** Handle errors gracefully, improve UX
+**Goal:** Error handling, history
 
 **Tasks:**
-- [ ] Loading states for all async operations
-- [ ] Error boundaries with retry
-- [ ] Toast notifications for success/failure
-- [ ] Mobile responsive
-- [ ] Rate limit handling (show retry countdown)
-- [ ] Private repo messaging (suggest adding token)
+- Error boundaries
+- Rate limit display with countdown
+- 404/private repo messaging
+- `/api/assessments` endpoint
+- Recent assessments on home
+
+**Acceptance:**
+- All error states visible
+- Can view past assessments
+- Refresh report page → still works
 
 ---
 
-## Session Template
+## P2: Enhancements (After MVP)
 
-Copy this for each Claude Code session:
+Only after P1 is complete and working:
 
-```markdown
-## Session: Phase N - [Name]
-**Date:** YYYY-MM-DD
-**Goal:** [one line]
+### Phase 7: File Picker
+- Tree view with checkboxes
+- Pre-select heuristic files
+- Manual add/remove
 
-### Inputs
-- Previous phase completed: YES/NO
-- Files from last session: [list]
+### Phase 8: Compare View
+- Side-by-side assessments
+- Score deltas highlighted
+- Classification changes
 
-### Commands Given
-[paste exact prompts]
+### Phase 9: Advanced Features
+- Re-analyze at different commit
+- Export report as PDF
+- Shareable links
 
-### Files Created/Modified
-- [file]: [brief description]
+---
 
-### Issues Encountered
-- [issue]: [resolution]
+## Quick Reference
 
-### Acceptance Criteria Status
-- [ ] Criterion 1
-- [ ] Criterion 2
+### File Structure (Target)
 
-### Next Session
-- Start Phase N+1
-- Address: [any carryover items]
+```
+repo-rubric/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx              # Home with URL input
+│   ├── report/
+│   │   └── [id]/
+│   │       └── page.tsx      # Report view
+│   └── api/
+│       ├── analyze/
+│       │   └── route.ts      # POST: run analysis
+│       ├── assessments/
+│       │   ├── route.ts      # GET: list
+│       │   └── [id]/
+│       │       └── route.ts  # GET: single
+│       └── repo/
+│           └── [owner]/
+│               └── [name]/
+│                   └── tree/
+│                       └── route.ts
+├── components/
+│   ├── ScoreCard.tsx
+│   ├── TaskTable.tsx
+│   └── CitationLink.tsx
+├── lib/
+│   ├── prisma.ts
+│   ├── github.ts
+│   ├── heuristics.ts
+│   ├── chunker.ts
+│   ├── llm.ts
+│   └── validate.ts
+├── prisma/
+│   └── schema.prisma
+├── schemas/
+│   └── reporubric.schema.json
+└── docs/
+    ├── CODEX_SYNTHESIS.md
+    └── SESSION_LOG.md
+```
+
+### Key Commands
+
+```bash
+# Development
+npm run dev
+
+# Database
+npx prisma generate
+npx prisma db push
+npx prisma studio    # GUI for database
+
+# Build check
+npm run build
+npm run lint
+
+# Test specific repo
+curl -X POST http://localhost:3000/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"repoUrl":"https://github.com/owner/repo"}'
+```
+
+### Environment Variables
+
+```env
+# Required
+OPENAI_API_KEY=sk-...
+DATABASE_URL=file:./dev.db
+
+# Optional (increases GitHub rate limit 60 → 5000/hr)
+GITHUB_TOKEN=ghp_...
+
+# Optional (defaults shown)
+OPENAI_MODEL=gpt-4o
+MAX_FILES=25
+MAX_TOTAL_CHARS=250000
 ```

@@ -1,4 +1,5 @@
 const GITHUB_API = "https://api.github.com";
+const ALLOWED_HOSTS = ["github.com", "www.github.com"];
 
 function getHeaders(): HeadersInit {
   const headers: HeadersInit = {
@@ -30,6 +31,12 @@ export interface TreeNode {
   size?: number;
 }
 
+export interface TreeResult {
+  tree: TreeNode[];
+  sha: string;
+  truncated: boolean;
+}
+
 export class GitHubError extends Error {
   constructor(
     message: string,
@@ -48,46 +55,41 @@ export class GitHubError extends Error {
  * - https://github.com/owner/repo.git
  * - https://github.com/owner/repo/tree/branch
  * - https://github.com/owner/repo/blob/branch/path
- * - github.com/owner/repo
  */
-export function parseGitHubUrl(url: string): ParsedGitHubUrl {
-  // Remove trailing slashes and .git suffix
-  let cleanUrl = url.trim().replace(/\/+$/, "").replace(/\.git$/, "");
-
-  // Add protocol if missing
-  if (!cleanUrl.startsWith("http")) {
-    cleanUrl = `https://${cleanUrl}`;
-  }
+export function parseGitHubUrl(urlString: string): ParsedGitHubUrl {
+  let url: URL;
 
   try {
-    const parsed = new URL(cleanUrl);
-
-    if (!parsed.hostname.includes("github.com")) {
-      throw new Error("Not a GitHub URL");
-    }
-
-    // Split path: /owner/repo/...
-    const parts = parsed.pathname.split("/").filter(Boolean);
-
-    if (parts.length < 2) {
-      throw new Error("URL must include owner and repository name");
-    }
-
-    const owner = parts[0];
-    const repo = parts[1];
-
-    // Validate owner and repo names
-    if (!/^[\w.-]+$/.test(owner) || !/^[\w.-]+$/.test(repo)) {
-      throw new Error("Invalid owner or repository name");
-    }
-
-    return { owner, repo };
-  } catch (error) {
-    if (error instanceof Error && error.message !== "Not a GitHub URL") {
-      throw new Error(`Invalid GitHub URL: ${error.message}`);
-    }
-    throw new Error("Invalid GitHub URL");
+    // Add protocol if missing
+    const cleanUrl = urlString.trim().startsWith("http")
+      ? urlString.trim()
+      : `https://${urlString.trim()}`;
+    url = new URL(cleanUrl);
+  } catch {
+    throw new Error("Invalid URL format");
   }
+
+  // Strict host validation
+  if (!ALLOWED_HOSTS.includes(url.hostname)) {
+    throw new Error(`Must be a GitHub URL. Got: ${url.hostname}`);
+  }
+
+  // Split path: /owner/repo/...
+  const parts = url.pathname.split("/").filter(Boolean);
+
+  if (parts.length < 2) {
+    throw new Error("Invalid GitHub URL. Expected: github.com/owner/repo");
+  }
+
+  const owner = parts[0];
+  const repo = parts[1].replace(/\.git$/, "");
+
+  // Validate owner and repo names (GitHub naming rules)
+  if (!/^[\w.-]+$/.test(owner) || !/^[\w.-]+$/.test(repo)) {
+    throw new Error("Invalid owner or repository name");
+  }
+
+  return { owner, repo };
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -162,12 +164,13 @@ export async function getLatestCommit(
 
 /**
  * Get the full file tree for a commit
+ * Returns tree nodes and truncation status
  */
 export async function getTree(
   owner: string,
   repo: string,
   sha: string
-): Promise<TreeNode[]> {
+): Promise<TreeResult> {
   const response = await fetch(
     `${GITHUB_API}/repos/${owner}/${repo}/git/trees/${sha}?recursive=1`,
     {
@@ -182,14 +185,11 @@ export async function getTree(
       sha: string;
       size?: number;
     }>;
+    sha: string;
     truncated: boolean;
   }>(response);
 
-  if (data.truncated) {
-    console.warn("Warning: Tree was truncated due to size limits");
-  }
-
-  return data.tree
+  const tree = data.tree
     .filter((item) => item.type === "blob" || item.type === "tree")
     .map((item) => ({
       path: item.path,
@@ -197,6 +197,12 @@ export async function getTree(
       sha: item.sha,
       size: item.size,
     }));
+
+  return {
+    tree,
+    sha: data.sha,
+    truncated: data.truncated ?? false,
+  };
 }
 
 /**

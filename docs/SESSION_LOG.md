@@ -6,9 +6,34 @@ Track progress across Claude Code sessions.
 
 ## Current Status
 
-**Phase:** 2 (Complete)
-**Last Session:** 2026-01-29
-**Next Action:** Start Phase 3 - File Selection Heuristics
+**Phase:** P0 (Blockers)
+**Last Session:** Phase 2 - GitHub Integration (partial)
+**Next Action:** Complete P0 blockers, then P1 MVP loop
+
+---
+
+## Priority Stack (Codex-informed)
+
+### P0: Must Fix Before Continuing
+- [ ] Prisma datasource url alignment
+- [ ] Next.js route params typing
+- [ ] GitHub URL validation (strict hosts)
+- [ ] GitHub tree truncation flag
+- [ ] Layout metadata (RepoRubric branding)
+
+### P1: MVP End-to-End Loop
+- [ ] POST /api/analyze (full pipeline)
+- [ ] Home page → API integration
+- [ ] Progress states in UI
+- [ ] Error handling (rate limit, 404, private)
+- [ ] Report page /report/[id]
+- [ ] Assessment history endpoint
+
+### P2: Polish (After MVP Works)
+- [ ] File picker UI
+- [ ] Compare view
+- [ ] Mobile responsive
+- [ ] Loading skeletons
 
 ---
 
@@ -16,7 +41,7 @@ Track progress across Claude Code sessions.
 
 ### Session 0: Documentation Setup
 **Date:** 2025-01-29
-**Duration:** Initial setup
+**Source:** Claude.ai
 
 #### Completed
 - Created project documentation structure
@@ -24,148 +49,185 @@ Track progress across Claude Code sessions.
 - Created JSON schema
 
 #### Files Created
-- `README.md`: Project overview and setup
-- `docs/ARCHITECTURE.md`: System design
-- `docs/IMPLEMENTATION_PLAN.md`: 10-phase build guide
-- `docs/RUBRIC_SPEC.md`: Assessment criteria
-- `docs/FILE_HEURISTICS.md`: File selection rules
-- `docs/CLAUDE_CODE_GUIDE.md`: Session instructions
-- `docs/SESSION_LOG.md`: This file
-- `schemas/reporubric.schema.json`: Output schema
-- `.env.example`: Environment template
-- `.gitignore`: Git ignore patterns
-
-#### Next Session
-- Start Phase 1: Create Next.js scaffold with Prisma
+- `README.md`, `QUICKSTART.md`
+- `docs/ARCHITECTURE.md`
+- `docs/IMPLEMENTATION_PLAN.md`
+- `docs/RUBRIC_SPEC.md`
+- `docs/FILE_HEURISTICS.md`
+- `docs/CLAUDE_CODE_GUIDE.md`
+- `docs/SESSION_LOG.md`
+- `schemas/reporubric.schema.json`
+- `.env.example`, `.gitignore`
 
 ---
 
-### Session 1: Phase 1 & 2 - Scaffold + GitHub Integration
-**Date:** 2026-01-29
-**Duration:** ~1 session
+### Session 1: Project Scaffold
+**Date:** [Completed]
+**Tool:** Claude Code
 
-#### Goal
-Create Next.js 14 project with Prisma SQLite + GitHub API integration
-
-#### Phase 1 Completed
-- [x] Next.js 14 project created with App Router
-- [x] TypeScript enabled
-- [x] Tailwind CSS enabled
-- [x] ESLint enabled
-- [x] Prisma configured with SQLite
+#### Completed
+- [x] Next.js 14 project created
+- [x] Prisma configured (needs P0 fix)
 - [x] RepoAssessment model created
-- [x] Prisma client generated
-- [x] Database pushed (dev.db created)
-- [x] Home page with URL input form
 - [x] `npm run dev` works
-- [x] `npm run lint` passes
+- [x] `npx prisma db push` works
 
-#### Phase 2 Completed
-- [x] `parseGitHubUrl()` - handles various URL formats
-- [x] `getRepoMetadata()` - fetches default branch & description
-- [x] `getLatestCommit()` - gets HEAD commit SHA
-- [x] `getTree()` - recursive file tree
-- [x] `getFileContent()` - fetch file contents (ready for Phase 4)
-- [x] `GitHubError` class with rate limit handling
-- [x] API route: `GET /api/repo/[owner]/[name]/tree`
-
-#### Files Created/Modified
-
-**Phase 1:**
-- `package.json` - Project dependencies
-- `tsconfig.json` - TypeScript configuration
-- `next.config.mjs` - Next.js configuration
-- `tailwind.config.ts` - Tailwind configuration
-- `postcss.config.mjs` - PostCSS configuration
-- `.eslintrc.json` - ESLint configuration
-- `next-env.d.ts` - Next.js TypeScript declarations
-- `prisma/schema.prisma` - Database schema with RepoAssessment model
-- `prisma.config.ts` - Prisma 7.x configuration
-- `prisma/dev.db` - SQLite database
-- `app/layout.tsx` - Root layout
-- `app/page.tsx` - Home page with URL input form
-- `app/globals.css` - Global styles with Tailwind
-- `app/generated/prisma/` - Generated Prisma client
-- `lib/prisma.ts` - Prisma singleton with libsql adapter
-- `public/next.svg` - Next.js logo
-- `public/vercel.svg` - Vercel logo
-
-**Phase 2:**
-- `lib/github.ts` - GitHub API utilities
-- `app/api/repo/[owner]/[name]/tree/route.ts` - Tree API endpoint
-
-#### Issues Encountered
-1. **npx/npm output not visible in Git Bash** - Resolved by using PowerShell for npm commands
-2. **Prisma 7.x breaking changes** - Required `@prisma/adapter-libsql` for SQLite connections (new in Prisma 7.x)
-3. **Prisma client import path** - Client generated to `app/generated/prisma/client` instead of `@prisma/client`
-
-#### Dependencies Added
-- `next@14.2.21`
-- `react@^18`, `react-dom@^18`
-- `prisma@^7.3.0`, `@prisma/client@^7.3.0`
-- `@prisma/adapter-libsql`, `@libsql/client`
-- `typescript@^5`
-- `tailwindcss@^3.4.1`
-- `eslint@^8`, `eslint-config-next@14.2.21`
-
-#### Next Session
-- Start Phase 3: File Selection Heuristics
-- Create `lib/heuristics.ts` with:
-  - `selectFiles(tree, maxFiles)` function
-  - `detectStack(tree)` function
-  - Tier-based file weighting (0-4)
-  - Ignore patterns implementation
+#### Issues to Address in P0
+- Prisma schema may be missing `url = env("DATABASE_URL")`
+- Layout metadata still shows Create Next App defaults
 
 ---
 
-### Session 2: [Phase 3 - Heuristics]
+### Session 2: GitHub Integration
+**Date:** [In Progress]
+**Tool:** Claude Code
+
+#### Completed
+- [x] `lib/github.ts` created
+- [x] parseGitHubUrl function
+- [x] getRepoMetadata function
+- [x] getLatestCommit function
+- [x] getTree function
+- [x] API route for tree
+
+#### Issues to Address in P0
+- GitHub URL validation too permissive
+- Tree truncation not surfaced
+- Route params typing may need fix
+
+---
+
+### Session 3: P0 Blockers
 **Date:** YYYY-MM-DD
-**Duration:**
+**Tool:** Claude Code
 
 #### Goal
-File selection logic
+Fix all P0 blockers identified by Codex
 
-#### Planned Tasks
-- [ ] Create `lib/heuristics.ts`
-- [ ] Implement file tier weights (0-4)
-- [ ] Implement ignore patterns (node_modules, dist, etc.)
-- [ ] Implement stack detection (Next.js, Python, etc.)
-- [ ] `selectFiles(tree, maxFiles=25)` returns selected files + detected stack
-- [ ] Unit tests for heuristics
+#### Prompt to Use
+See `CLAUDE_CODE_PROMPT.md` P0 section
 
-#### Acceptance Criteria
-- [ ] README.md always included
-- [ ] package.json included for JS projects
-- [ ] node_modules ignored
-- [ ] Returns detected stack array
-- [ ] Respects maxFiles limit
+#### Checklist
+- [ ] Fix Prisma schema datasource
+- [ ] Standardize DATABASE_URL in .env.example
+- [ ] Fix route params typing (if needed)
+- [ ] Tighten GitHub URL validation
+- [ ] Add truncation flag to tree response
+- [ ] Update layout metadata
+
+#### Verification
+```bash
+# Fresh clone test
+rm -rf node_modules .next
+npm install
+npx prisma generate
+npx prisma db push
+npm run build
+npm run dev
+```
 
 ---
 
-## Milestones
+### Session 4: P1 MVP Loop (Part 1)
+**Date:** YYYY-MM-DD
+**Tool:** Claude Code
 
-| Milestone | Target | Actual |
-|-----------|--------|--------|
-| Scaffold working | Session 1 | Session 1 |
-| GitHub API working | Session 2 | Session 1 |
-| First LLM call | Session 5 | |
-| Full analysis working | Session 6 | |
-| UI complete | Session 8 | |
-| MVP complete | Session 10 | |
+#### Goal
+Implement /api/analyze endpoint
+
+#### Files to Create/Modify
+- `lib/heuristics.ts` - file selection
+- `lib/chunker.ts` - content chunking
+- `lib/llm.ts` - OpenAI pipeline
+- `lib/validate.ts` - JSON schema validation
+- `app/api/analyze/route.ts` - main endpoint
+
+#### Checklist
+- [ ] File selection heuristics work
+- [ ] Content fetching with chunking
+- [ ] LLM call with strict JSON schema
+- [ ] Schema validation (AJV or Zod)
+- [ ] Assessment saved to database
+
+---
+
+### Session 5: P1 MVP Loop (Part 2)
+**Date:** YYYY-MM-DD
+**Tool:** Claude Code
+
+#### Goal
+Wire UI to API, build report page
+
+#### Files to Create/Modify
+- `app/page.tsx` - integrate with /api/analyze
+- `app/report/[id]/page.tsx` - report view
+- `components/` - reusable components
+
+#### Checklist
+- [ ] Home page calls /api/analyze
+- [ ] Progress states visible
+- [ ] Errors displayed properly
+- [ ] Redirect to report on success
+- [ ] Report page renders all sections
+- [ ] Citations link to GitHub
+
+---
+
+### Session 6: P1 Completion
+**Date:** YYYY-MM-DD
+**Tool:** Claude Code
+
+#### Goal
+Polish MVP, add history
+
+#### Checklist
+- [ ] Assessment history endpoint
+- [ ] Recent assessments on home page
+- [ ] Error boundaries
+- [ ] Loading states complete
+
+#### MVP Acceptance Test
+1. Paste https://github.com/vercel/next.js
+2. See progress states
+3. Land on report page
+4. Report shows scores, tasks, citations
+5. Refresh page - report still there
+
+---
+
+## Milestone Tracking
+
+| Milestone | Target | Actual | Status |
+|-----------|--------|--------|--------|
+| Scaffold complete | Session 1 | Session 1 | ✅ |
+| GitHub API working | Session 2 | Session 2 | ✅ |
+| P0 blockers fixed | Session 3 | | ⏳ |
+| First LLM call | Session 4 | | |
+| Full analysis pipeline | Session 4 | | |
+| Report page working | Session 5 | | |
+| MVP complete | Session 6 | | |
 
 ---
 
 ## Known Issues Backlog
 
-| Issue | Priority | Status | Resolution |
-|-------|----------|--------|------------|
-| Next.js security warning | Low | Open | Upgrade to patched version when available |
-| ESLint deprecation warnings | Low | Open | Will auto-resolve with future updates |
+| Issue | Priority | Status | Session |
+|-------|----------|--------|---------|
+| Prisma datasource url | P0 | Open | 3 |
+| Route params typing | P0 | Open | 3 |
+| GitHub URL validation | P0 | Open | 3 |
+| Tree truncation | P0 | Open | 3 |
+| Layout metadata | P0 | Open | 3 |
 
 ---
 
-## Notes
+## Codex Recommendations Applied
 
-- Prisma 7.x requires driver adapters - using `@prisma/adapter-libsql` for SQLite
-- npm/npx commands need to run via PowerShell on this Windows/Git Bash environment
-- GitHub API rate limits: 60/hr unauthenticated, 5000/hr with token
+See `docs/CODEX_SYNTHESIS.md` for full analysis.
+
+Key changes from original plan:
+1. **Reordered priorities** - Fix P0 blockers before adding features
+2. **Simplified phases** - Combined into P0/P1/P2 instead of 10 phases
+3. **Tightened validation** - Strict GitHub host allowlist
+4. **Added truncation handling** - Surface GitHub API limitations
+5. **Focus on loop** - Ship end-to-end before polish

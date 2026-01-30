@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app:*)",
+      "Bash(npx --yes create-next-app@latest:*)",
+      "Bash(node:*)",
+      "Bash(npm --version)",
+      "Bash(npx:*)",
+      "Bash(\"/c/Program Files/nodejs/npx\" --version)",
+      "Bash(cmd.exe /c \"npx --version\")",
+      "Bash(cmd.exe /c \"npx --yes create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias @/* --use-npm\")",
+      "Bash(npm exec:*)",
+      "Bash(echo:*)",
+      "Bash(npm install)",
+      "Bash(tee:*)",
+      "Bash(cmd.exe /c \"npm install\")",
+      "Bash(test:*)",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; npm install 2>&1\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; npm run lint 2>&1\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; npm install prisma @prisma/client 2>&1\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; npx prisma init --datasource-provider sqlite 2>&1\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; npx prisma generate 2>&1\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; npx prisma db push 2>&1\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; npx tsc --noEmit 2>&1\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; npm install @prisma/adapter-libsql @libsql/client 2>&1\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; ls node_modules/@prisma/adapter-libsql/*.d.ts 2>&1\")",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd Phase 1 & 2: Next.js scaffold + GitHub integration\n\nPhase 1 - Project Scaffold:\n- Next.js 14 with App Router, TypeScript, Tailwind, ESLint\n- Prisma 7.x with SQLite and RepoAssessment model\n- Home page with GitHub URL input form\n\nPhase 2 - GitHub Integration:\n- lib/github.ts: URL parsing, repo metadata, tree fetching\n- API route: GET /api/repo/[owner]/[name]/tree\n- Rate limit and error handling\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; npm run build 2>&1\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix\\(p0\\): GitHub validation, tree truncation, layout metadata\n\nP0 Blockers fixed \\(Codex-informed\\):\n- Stricter GitHub URL validation with ALLOWED_HOSTS\n- getTree now returns TreeResult with truncated flag\n- API route includes truncated status in response\n- Layout metadata updated to RepoRubric branding\n\nNote: Prisma schema url not needed - Prisma 7.x uses prisma.config.ts\nNote: Route params typing is correct for Next.js 14.2+ \\(Promise wrapper\\)\n\nAlso adds Codex analysis documentation.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; npm install openai 2>&1\")",
+      "Bash(git commit:*)",
+      "Bash(npm run build:*)",
+      "Bash(powershell -Command \"cd ''C:\\\\Users\\\\user\\\\repo-rubric''; npm run build 2>&1 | Select-Object -Last 60\")",
+      "Bash(npm run lint:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}

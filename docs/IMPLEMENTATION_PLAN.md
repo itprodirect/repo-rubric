@@ -2,7 +2,7 @@
 
 Prioritized build order based on 4-run Codex analysis. Focus: ship the end-to-end loop first.
 
-**Status: P0 and P1 COMPLETE - MVP is working!**
+**Status: P0, P1, and P2.1 COMPLETE - MVP + File Picker working!**
 
 ---
 
@@ -237,19 +237,21 @@ curl -X POST http://localhost:3000/api/analyze \
 
 ## P2: Enhancements (After MVP)
 
-Only after P1 is complete and working:
+### Phase 7: File Picker - COMPLETE (Session 7)
+- [x] Tree view with checkboxes
+- [x] Pre-select heuristic files with reasons
+- [x] Manual add/remove (select/deselect)
+- [x] Search/filter functionality
+- [x] Selection summary with caps warnings
+- [x] `selectedPaths` override mode in API
+- [x] `/api/select-files` endpoint
 
-### Phase 7: File Picker
-- Tree view with checkboxes
-- Pre-select heuristic files
-- Manual add/remove
-
-### Phase 8: Compare View
+### Phase 8: Compare View - TODO
 - Side-by-side assessments
 - Score deltas highlighted
 - Classification changes
 
-### Phase 9: Advanced Features
+### Phase 9: Advanced Features - TODO
 - Re-analyze at different commit
 - Export report as PDF
 - Shareable links

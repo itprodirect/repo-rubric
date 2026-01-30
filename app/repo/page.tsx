@@ -165,7 +165,8 @@ function RepoPageContent() {
   const estimatedChars = useMemo(() => {
     if (!data) return 0;
     let total = 0;
-    for (const path of selectedPaths) {
+    const pathsArray = Array.from(selectedPaths);
+    for (const path of pathsArray) {
       const node = data.tree.find((n) => n.path === path);
       if (node?.size) {
         total += node.size * AVG_CHARS_PER_BYTE;

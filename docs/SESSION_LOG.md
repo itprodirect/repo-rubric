@@ -6,9 +6,9 @@ Track progress across Claude Code sessions.
 
 ## Current Status
 
-**Phase:** MVP Complete (P1 Done)
-**Last Session:** Session 6 - Polish MVP
-**Next Action:** P2 Enhancements (File Picker, Compare View)
+**Phase:** P2.1 Complete (File Picker)
+**Last Session:** Session 7 - P2.1 File Picker UI
+**Next Action:** P2.2 Compare View (or other P2 enhancements)
 
 ---
 
@@ -30,9 +30,9 @@ Track progress across Claude Code sessions.
 - [x] Assessment history endpoint
 
 ### P2: Polish (After MVP Works)
-- [ ] File picker UI
-- [ ] Compare view
-- [ ] Mobile responsive
+- [x] File picker UI (P2.1 - Session 7)
+- [ ] Compare view (P2.2)
+- [ ] Mobile responsive (P2.3)
 - [x] Loading skeletons
 - [x] Error boundaries
 
@@ -173,6 +173,41 @@ Track progress across Claude Code sessions.
 
 ---
 
+### Session 7: P2.1 File Picker UI
+**Date:** 2025-01-30
+**Tool:** Claude Code
+
+#### Completed
+- [x] `app/api/select-files/route.ts` - File selection endpoint with preselection
+- [x] `app/repo/page.tsx` - Full file picker UI with:
+  - File tree with checkboxes
+  - Search/filter input
+  - Quick actions (Select All, Clear, Reset to Suggested)
+  - Selection summary with caps warnings
+  - Truncation warning for large repos
+  - Rate limit handling with countdown
+  - Progress states during analysis
+- [x] `components/FileTree.tsx` - Tree display with preselection highlighting
+- [x] Updated `/api/analyze` with `selectedPaths` override mode
+- [x] Updated home page to navigate to `/repo?url=...` for file selection
+- [x] Documentation reorganization and cleanup
+
+#### Files Created
+- `app/repo/page.tsx`
+- `app/api/select-files/route.ts`
+- `components/FileTree.tsx`
+- `docs/README.md` (navigation index)
+- `docs/P2_CHECKLIST.md`
+- `docs/CLAUDE_CODE_PROMPT_P2.md`
+- `docs/FILE_SELECTION_MODES.md`
+
+#### Files Modified
+- `app/page.tsx` - Changed to navigate to file picker instead of direct analysis
+- `app/api/analyze/route.ts` - Added `selectedPaths` override mode
+- `lib/heuristics.ts` - Added reasons for file selection
+
+---
+
 ## Milestone Tracking
 
 | Milestone | Target | Actual | Status |
@@ -184,6 +219,7 @@ Track progress across Claude Code sessions.
 | Full analysis pipeline | Session 4 | Session 4 | Done |
 | Report page working | Session 5 | Session 5 | Done |
 | MVP complete | Session 6 | Session 6 | Done |
+| P2.1 File Picker | Session 7 | Session 7 | Done |
 
 ---
 

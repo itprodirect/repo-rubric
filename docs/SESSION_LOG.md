@@ -6,34 +6,35 @@ Track progress across Claude Code sessions.
 
 ## Current Status
 
-**Phase:** P0 (Blockers)
-**Last Session:** Phase 2 - GitHub Integration (partial)
-**Next Action:** Complete P0 blockers, then P1 MVP loop
+**Phase:** MVP Complete (P1 Done)
+**Last Session:** Session 6 - Polish MVP
+**Next Action:** P2 Enhancements (File Picker, Compare View)
 
 ---
 
 ## Priority Stack (Codex-informed)
 
 ### P0: Must Fix Before Continuing
-- [ ] Prisma datasource url alignment
-- [ ] Next.js route params typing
-- [ ] GitHub URL validation (strict hosts)
-- [ ] GitHub tree truncation flag
-- [ ] Layout metadata (RepoRubric branding)
+- [x] Prisma datasource url alignment
+- [x] Next.js route params typing
+- [x] GitHub URL validation (strict hosts)
+- [x] GitHub tree truncation flag
+- [x] Layout metadata (RepoRubric branding)
 
 ### P1: MVP End-to-End Loop
-- [ ] POST /api/analyze (full pipeline)
-- [ ] Home page → API integration
-- [ ] Progress states in UI
-- [ ] Error handling (rate limit, 404, private)
-- [ ] Report page /report/[id]
-- [ ] Assessment history endpoint
+- [x] POST /api/analyze (full pipeline)
+- [x] Home page → API integration
+- [x] Progress states in UI
+- [x] Error handling (rate limit, 404, private)
+- [x] Report page /report/[id]
+- [x] Assessment history endpoint
 
 ### P2: Polish (After MVP Works)
 - [ ] File picker UI
 - [ ] Compare view
 - [ ] Mobile responsive
-- [ ] Loading skeletons
+- [x] Loading skeletons
+- [x] Error boundaries
 
 ---
 
@@ -62,136 +63,113 @@ Track progress across Claude Code sessions.
 ---
 
 ### Session 1: Project Scaffold
-**Date:** [Completed]
+**Date:** 2025-01-29
 **Tool:** Claude Code
 
 #### Completed
 - [x] Next.js 14 project created
-- [x] Prisma configured (needs P0 fix)
+- [x] Prisma 7.x configured with libsql adapter
 - [x] RepoAssessment model created
 - [x] `npm run dev` works
 - [x] `npx prisma db push` works
 
-#### Issues to Address in P0
-- Prisma schema may be missing `url = env("DATABASE_URL")`
-- Layout metadata still shows Create Next App defaults
-
 ---
 
 ### Session 2: GitHub Integration
-**Date:** [In Progress]
+**Date:** 2025-01-29
 **Tool:** Claude Code
 
 #### Completed
 - [x] `lib/github.ts` created
-- [x] parseGitHubUrl function
+- [x] parseGitHubUrl function with strict validation
 - [x] getRepoMetadata function
 - [x] getLatestCommit function
-- [x] getTree function
+- [x] getTree function with truncation flag
 - [x] API route for tree
 
-#### Issues to Address in P0
-- GitHub URL validation too permissive
-- Tree truncation not surfaced
-- Route params typing may need fix
+---
+
+### Session 3: P0 Blockers + P1 Start
+**Date:** 2025-01-29
+**Tool:** Claude Code
+
+#### Completed
+- [x] Fixed Prisma 7.x breaking changes (libsql adapter)
+- [x] Fixed route params typing (Promise wrapper for Next.js 14.2+)
+- [x] Tightened GitHub URL validation
+- [x] Added truncation flag to tree response
+- [x] Updated layout metadata
 
 ---
 
-### Session 3: P0 Blockers
-**Date:** YYYY-MM-DD
+### Session 4: P1 MVP Loop (Analysis Pipeline)
+**Date:** 2025-01-29
 **Tool:** Claude Code
 
-#### Goal
-Fix all P0 blockers identified by Codex
+#### Completed
+- [x] `lib/heuristics.ts` - File selection with tier weights
+- [x] `lib/chunker.ts` - Content chunking with citations
+- [x] `lib/llm.ts` - OpenAI pipeline with structured output
+- [x] `lib/validate.ts` - Schema validation
+- [x] `app/api/analyze/route.ts` - Full analysis endpoint
 
-#### Prompt to Use
-See `CLAUDE_CODE_PROMPT.md` P0 section
-
-#### Checklist
-- [ ] Fix Prisma schema datasource
-- [ ] Standardize DATABASE_URL in .env.example
-- [ ] Fix route params typing (if needed)
-- [ ] Tighten GitHub URL validation
-- [ ] Add truncation flag to tree response
-- [ ] Update layout metadata
-
-#### Verification
-```bash
-# Fresh clone test
-rm -rf node_modules .next
-npm install
-npx prisma generate
-npx prisma db push
-npm run build
-npm run dev
-```
+#### Files Created
+- `lib/heuristics.ts`
+- `lib/chunker.ts`
+- `lib/llm.ts`
+- `lib/validate.ts`
+- `app/api/analyze/route.ts`
 
 ---
 
-### Session 4: P1 MVP Loop (Part 1)
-**Date:** YYYY-MM-DD
+### Session 5: P1 MVP Loop (UI Integration)
+**Date:** 2025-01-29
 **Tool:** Claude Code
 
-#### Goal
-Implement /api/analyze endpoint
+#### Completed
+- [x] Home page with form submission and progress states
+- [x] Report page `/report/[id]` with full rubric display
+- [x] Score cards component
+- [x] Classification badge component
+- [x] Task table component
+- [x] Citation links component
+- [x] Assessments API endpoint
 
-#### Files to Create/Modify
-- `lib/heuristics.ts` - file selection
-- `lib/chunker.ts` - content chunking
-- `lib/llm.ts` - OpenAI pipeline
-- `lib/validate.ts` - JSON schema validation
-- `app/api/analyze/route.ts` - main endpoint
-
-#### Checklist
-- [ ] File selection heuristics work
-- [ ] Content fetching with chunking
-- [ ] LLM call with strict JSON schema
-- [ ] Schema validation (AJV or Zod)
-- [ ] Assessment saved to database
+#### Files Created
+- `components/ScoreCard.tsx`
+- `components/ClassificationBadge.tsx`
+- `components/TaskTable.tsx`
+- `components/CitationLink.tsx`
+- `app/report/[id]/page.tsx`
+- `app/api/assessments/route.ts`
+- `app/api/assessments/[id]/route.ts`
 
 ---
 
-### Session 5: P1 MVP Loop (Part 2)
-**Date:** YYYY-MM-DD
+### Session 6: P1 Completion (Polish MVP)
+**Date:** 2025-01-29
 **Tool:** Claude Code
 
-#### Goal
-Wire UI to API, build report page
+#### Completed
+- [x] Error boundary component (class + functional)
+- [x] Loading skeleton components
+- [x] Not-found pages (global + report-specific)
+- [x] Rate limit countdown on home page
+- [x] Loading states for all pages
+- [x] Error pages with retry buttons
 
-#### Files to Create/Modify
-- `app/page.tsx` - integrate with /api/analyze
-- `app/report/[id]/page.tsx` - report view
-- `components/` - reusable components
+#### Files Created
+- `components/ErrorBoundary.tsx`
+- `components/Skeleton.tsx`
+- `app/not-found.tsx`
+- `app/report/[id]/not-found.tsx`
+- `app/loading.tsx`
+- `app/report/[id]/loading.tsx`
+- `app/error.tsx`
+- `app/report/[id]/error.tsx`
 
-#### Checklist
-- [ ] Home page calls /api/analyze
-- [ ] Progress states visible
-- [ ] Errors displayed properly
-- [ ] Redirect to report on success
-- [ ] Report page renders all sections
-- [ ] Citations link to GitHub
-
----
-
-### Session 6: P1 Completion
-**Date:** YYYY-MM-DD
-**Tool:** Claude Code
-
-#### Goal
-Polish MVP, add history
-
-#### Checklist
-- [ ] Assessment history endpoint
-- [ ] Recent assessments on home page
-- [ ] Error boundaries
-- [ ] Loading states complete
-
-#### MVP Acceptance Test
-1. Paste https://github.com/vercel/next.js
-2. See progress states
-3. Land on report page
-4. Report shows scores, tasks, citations
-5. Refresh page - report still there
+#### Files Modified
+- `app/page.tsx` - Added rate limit countdown, disabled button state
 
 ---
 
@@ -199,13 +177,13 @@ Polish MVP, add history
 
 | Milestone | Target | Actual | Status |
 |-----------|--------|--------|--------|
-| Scaffold complete | Session 1 | Session 1 | ✅ |
-| GitHub API working | Session 2 | Session 2 | ✅ |
-| P0 blockers fixed | Session 3 | | ⏳ |
-| First LLM call | Session 4 | | |
-| Full analysis pipeline | Session 4 | | |
-| Report page working | Session 5 | | |
-| MVP complete | Session 6 | | |
+| Scaffold complete | Session 1 | Session 1 | Done |
+| GitHub API working | Session 2 | Session 2 | Done |
+| P0 blockers fixed | Session 3 | Session 3 | Done |
+| First LLM call | Session 4 | Session 4 | Done |
+| Full analysis pipeline | Session 4 | Session 4 | Done |
+| Report page working | Session 5 | Session 5 | Done |
+| MVP complete | Session 6 | Session 6 | Done |
 
 ---
 
@@ -213,11 +191,42 @@ Polish MVP, add history
 
 | Issue | Priority | Status | Session |
 |-------|----------|--------|---------|
-| Prisma datasource url | P0 | Open | 3 |
-| Route params typing | P0 | Open | 3 |
-| GitHub URL validation | P0 | Open | 3 |
-| Tree truncation | P0 | Open | 3 |
-| Layout metadata | P0 | Open | 3 |
+| Prisma datasource url | P0 | Fixed | 3 |
+| Route params typing | P0 | Fixed | 3 |
+| GitHub URL validation | P0 | Fixed | 3 |
+| Tree truncation | P0 | Fixed | 3 |
+| Layout metadata | P0 | Fixed | 3 |
+
+---
+
+## Technical Notes
+
+### Prisma 7.x Migration
+Prisma 7.x introduced breaking changes:
+- Requires `@prisma/adapter-libsql` instead of direct SQLite connection
+- Client import changed to `@/app/generated/prisma/client`
+- Uses `prisma.config.ts` for datasource configuration
+- PrismaClient constructor requires `{ adapter }` option
+
+### Next.js 14.2+ Route Params
+Dynamic route params now use Promise wrapper:
+```typescript
+// Correct for Next.js 14.2+
+{ params }: { params: Promise<{ id: string }> }
+const { id } = await params;
+```
+
+### libsql Bundling
+Fixed with `serverComponentsExternalPackages` in `next.config.mjs`:
+```javascript
+experimental: {
+  serverComponentsExternalPackages: [
+    "@prisma/adapter-libsql",
+    "@libsql/client",
+    "libsql",
+  ],
+}
+```
 
 ---
 
@@ -226,8 +235,8 @@ Polish MVP, add history
 See `docs/CODEX_SYNTHESIS.md` for full analysis.
 
 Key changes from original plan:
-1. **Reordered priorities** - Fix P0 blockers before adding features
+1. **Reordered priorities** - Fixed P0 blockers before adding features
 2. **Simplified phases** - Combined into P0/P1/P2 instead of 10 phases
 3. **Tightened validation** - Strict GitHub host allowlist
 4. **Added truncation handling** - Surface GitHub API limitations
-5. **Focus on loop** - Ship end-to-end before polish
+5. **Focus on loop** - Shipped end-to-end before polish

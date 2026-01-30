@@ -2,6 +2,8 @@
 
 Prioritized build order based on 4-run Codex analysis. Focus: ship the end-to-end loop first.
 
+**Status: P0 and P1 COMPLETE - MVP is working!**
+
 ---
 
 ## Pre-flight Checklist
@@ -16,11 +18,11 @@ npx prisma generate     # Does Prisma work?
 
 ---
 
-## P0: Fix Blockers (Session 3)
+## P0: Fix Blockers (Session 3) - DONE
 
-**Time estimate:** 30-45 minutes
+**Status:** Complete
 
-These issues will cause problems if not fixed now:
+These issues have been fixed:
 
 ### 1. Prisma Schema Fix
 
@@ -171,11 +173,11 @@ npm run dev
 
 ---
 
-## P1: MVP Loop (Sessions 4-6)
+## P1: MVP Loop (Sessions 4-6) - DONE
 
-**Time estimate:** 2-4 hours total
+**Status:** Complete
 
-### Session 4: Analysis Pipeline
+### Session 4: Analysis Pipeline - DONE
 
 **Goal:** `/api/analyze` returns valid rubric JSON
 
@@ -196,7 +198,7 @@ curl -X POST http://localhost:3000/api/analyze \
 # Returns: { assessmentId: "...", ... }
 ```
 
-### Session 5: UI Integration
+### Session 5: UI Integration - DONE
 
 **Goal:** Home page → Analysis → Report page
 
@@ -213,21 +215,23 @@ curl -X POST http://localhost:3000/api/analyze \
 - Report shows classification, scores, tasks
 - Citations link to correct GitHub files
 
-### Session 6: Polish MVP
+### Session 6: Polish MVP - DONE
 
 **Goal:** Error handling, history
 
-**Tasks:**
-- Error boundaries
-- Rate limit display with countdown
-- 404/private repo messaging
-- `/api/assessments` endpoint
-- Recent assessments on home
+**Completed:**
+- [x] Error boundaries (class + functional)
+- [x] Rate limit display with countdown
+- [x] 404/private repo messaging
+- [x] `/api/assessments` endpoint
+- [x] Recent assessments on home
+- [x] Loading skeletons
+- [x] Loading states for all pages
 
-**Acceptance:**
-- All error states visible
-- Can view past assessments
-- Refresh report page → still works
+**Acceptance:** All passed
+- [x] All error states visible
+- [x] Can view past assessments
+- [x] Refresh report page → still works
 
 ---
 

@@ -39,3 +39,35 @@ export async function GET(
     );
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const assessment = await prisma.repoAssessment.findUnique({
+      where: { id },
+    });
+
+    if (!assessment) {
+      return NextResponse.json(
+        { error: "Assessment not found" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.repoAssessment.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Assessment delete error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete assessment" },
+      { status: 500 }
+    );
+  }
+}

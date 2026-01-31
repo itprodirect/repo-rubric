@@ -45,19 +45,31 @@ Open http://localhost:3000
 
 ## Features
 
-### MVP Complete
-- URL input with progress states
-- Full analysis pipeline (file selection → chunking → LLM → validation)
-- Report page with all rubric sections
-- Assessment history
-- Error boundaries and loading states
-- Rate limit countdown
-- 404 handling
+### Core Features
+- **URL input** with progress states and rate limit handling
+- **File picker** - Select which files to analyze (or use auto-detect)
+- **Full analysis pipeline** - File selection → chunking → LLM → validation
+- **Report page** with all rubric sections, scores, tasks, guardrails
+- **Assessment history** with recent assessments on home page
 
-### Coming Soon (P2)
-- File picker UI for manual selection
-- Compare assessments side-by-side
+### Compare & Manage
+- **Compare view** - Side-by-side assessment comparison at `/compare?a=<id>&b=<id>`
+  - Classification upgrade/downgrade visualization
+  - Score delta indicators
+  - Task and KPI comparisons
+- **Export as JSON** - Download assessment data
+- **Re-analyze** - Re-run analysis with different file selection
+- **Delete assessments** - Clean up history
+
+### Polish
+- Error boundaries and loading skeletons
+- 404 handling
+- Rate limit countdown
+
+### Coming Soon (P2.3+)
 - Mobile responsive design
+- History page with pagination and search
+- Same-repo trend tracking
 
 ## Documentation
 
@@ -76,23 +88,30 @@ Open http://localhost:3000
 repo-rubric/
 ├── app/
 │   ├── layout.tsx              # Root layout
-│   ├── page.tsx                # Home: URL input + recent assessments
+│   ├── page.tsx                # Home: URL input + recent assessments + compare mode
 │   ├── loading.tsx             # Global loading state
 │   ├── error.tsx               # Global error boundary
 │   ├── not-found.tsx           # Global 404 page
+│   ├── repo/
+│   │   └── page.tsx            # File picker UI
 │   ├── report/
 │   │   └── [id]/
-│   │       ├── page.tsx        # Report view
+│   │       ├── page.tsx        # Report view with export/re-analyze/compare
 │   │       ├── loading.tsx     # Report loading skeleton
 │   │       ├── error.tsx       # Report error boundary
 │   │       └── not-found.tsx   # Assessment not found
+│   ├── compare/
+│   │   ├── page.tsx            # Side-by-side comparison
+│   │   └── loading.tsx         # Compare loading skeleton
 │   ├── api/
 │   │   ├── analyze/
 │   │   │   └── route.ts        # POST: run full analysis
+│   │   ├── select-files/
+│   │   │   └── route.ts        # POST: get file tree with preselection
 │   │   ├── assessments/
 │   │   │   ├── route.ts        # GET: list assessments
 │   │   │   └── [id]/
-│   │   │       └── route.ts    # GET: single assessment
+│   │   │       └── route.ts    # GET/DELETE: single assessment
 │   │   └── repo/
 │   │       └── [owner]/
 │   │           └── [name]/
@@ -102,8 +121,15 @@ repo-rubric/
 │       └── prisma/             # Generated Prisma client
 ├── components/
 │   ├── ClassificationBadge.tsx # A/B/C/D badges
+│   ├── ClassificationDelta.tsx # Compare: upgrade/downgrade arrows
 │   ├── CitationLink.tsx        # GitHub file links
+│   ├── CompareButton.tsx       # "Compare with..." dropdown trigger
+│   ├── CompareScoreCard.tsx    # Compare: side-by-side scores
+│   ├── DeltaIndicator.tsx      # Compare: +/- score changes
+│   ├── AssessmentPicker.tsx    # Compare: assessment dropdown
 │   ├── ErrorBoundary.tsx       # Error handling
+│   ├── ExportButton.tsx        # JSON export button
+│   ├── FileTree.tsx            # File picker tree
 │   ├── ScoreCard.tsx           # Score display
 │   ├── Skeleton.tsx            # Loading skeletons
 │   └── TaskTable.tsx           # Task breakdown table
@@ -155,6 +181,22 @@ Get a specific assessment.
 
 ```bash
 curl http://localhost:3000/api/assessments/uuid
+```
+
+### DELETE /api/assessments/[id]
+Delete an assessment.
+
+```bash
+curl -X DELETE http://localhost:3000/api/assessments/uuid
+```
+
+### POST /api/select-files
+Get file tree with preselection hints for the file picker.
+
+```bash
+curl -X POST http://localhost:3000/api/select-files \
+  -H "Content-Type: application/json" \
+  -d '{"repoUrl":"https://github.com/owner/repo"}'
 ```
 
 ## License

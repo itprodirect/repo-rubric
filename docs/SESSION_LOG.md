@@ -6,9 +6,9 @@ Track progress across Claude Code sessions.
 
 ## Current Status
 
-**Phase:** P2.1 Complete (File Picker)
-**Last Session:** Session 7 - P2.1 File Picker UI
-**Next Action:** P2.2 Compare View (or other P2 enhancements)
+**Phase:** P2.2 Complete (Compare View)
+**Last Session:** Session 8 - P2.2 Compare View
+**Next Action:** P2.3 Mobile Responsive (or other P2 enhancements)
 
 ---
 
@@ -31,7 +31,7 @@ Track progress across Claude Code sessions.
 
 ### P2: Polish (After MVP Works)
 - [x] File picker UI (P2.1 - Session 7)
-- [ ] Compare view (P2.2)
+- [x] Compare view (P2.2 - Session 8)
 - [ ] Mobile responsive (P2.3)
 - [x] Loading skeletons
 - [x] Error boundaries
@@ -208,6 +208,49 @@ Track progress across Claude Code sessions.
 
 ---
 
+### Session 8: P2.2 Compare View + Quick Wins
+**Date:** 2025-01-30
+**Tool:** Claude Code
+
+#### Completed - Compare View (P2.2)
+- [x] `components/DeltaIndicator.tsx` - Score change indicator with arrows and colors
+- [x] `components/CompareScoreCard.tsx` - Side-by-side score comparison with progress bars
+- [x] `components/ClassificationDelta.tsx` - Classification comparison with upgrade/downgrade arrows
+- [x] `components/AssessmentPicker.tsx` - Dropdown for selecting assessments to compare
+- [x] `components/CompareButton.tsx` - Client wrapper for report page integration
+- [x] `app/compare/page.tsx` - Full compare page with:
+  - Side-by-side header with repo info
+  - Classification delta visualization
+  - Score comparison grid (6 metrics)
+  - Tasks summary with count delta
+  - Recommendation changes highlighted
+  - KPIs comparison (side-by-side lists)
+- [x] `app/compare/loading.tsx` - Loading skeleton for compare page
+- [x] Updated home page with compare mode (checkbox selection)
+- [x] Updated report page with "Compare with..." button
+
+#### Completed - Quick Wins
+- [x] **Export Report as JSON** - Download button on report page
+- [x] **Re-analyze Button** - Navigate to file picker with same repo
+- [x] **Delete Assessment** - Remove from history with confirmation
+
+#### Files Created
+- `components/DeltaIndicator.tsx`
+- `components/CompareScoreCard.tsx`
+- `components/ClassificationDelta.tsx`
+- `components/AssessmentPicker.tsx`
+- `components/CompareButton.tsx`
+- `components/ExportButton.tsx`
+- `app/compare/page.tsx`
+- `app/compare/loading.tsx`
+
+#### Files Modified
+- `app/page.tsx` - Added compare mode with checkbox selection, delete functionality
+- `app/report/[id]/page.tsx` - Added CompareButton, ExportButton, Re-analyze link
+- `app/api/assessments/[id]/route.ts` - Added DELETE endpoint
+
+---
+
 ## Milestone Tracking
 
 | Milestone | Target | Actual | Status |
@@ -220,6 +263,7 @@ Track progress across Claude Code sessions.
 | Report page working | Session 5 | Session 5 | Done |
 | MVP complete | Session 6 | Session 6 | Done |
 | P2.1 File Picker | Session 7 | Session 7 | Done |
+| P2.2 Compare View | Session 8 | Session 8 | Done |
 
 ---
 
@@ -276,3 +320,42 @@ Key changes from original plan:
 3. **Tightened validation** - Strict GitHub host allowlist
 4. **Added truncation handling** - Surface GitHub API limitations
 5. **Focus on loop** - Shipped end-to-end before polish
+
+---
+
+## Next Session Suggestions (P2.3+)
+
+Prioritized by impact and simplicity:
+
+### High Priority (Recommended for Session 9)
+1. **History Page** (`/history`) - Full assessment list with pagination, search, filtering
+   - Currently limited to 5 on home page
+   - Add sorting (by date, classification, repo)
+   - Builds on existing `/api/assessments` endpoint
+
+2. **Mobile Responsive (P2.3)** - Per original roadmap
+   - Header stacking on small screens
+   - Compare page responsive grid
+   - Touch-friendly interactions
+
+### Medium Priority
+3. **Same-Repo Trend View** - When comparing assessments of same repo
+   - Auto-detect same repo, different commits
+   - Show timeline of classification changes
+   - Track score progression
+
+4. **Batch Analysis** - Analyze multiple repos at once
+   - Queue system for multiple URLs
+   - Progress tracking per repo
+   - Summary view of all results
+
+### Lower Priority (Future Sessions)
+5. **PDF Export** - Generate formatted report
+6. **Webhook/API Key** - Allow external triggers
+7. **Custom Rubric Weights** - Let users adjust scoring priorities
+8. **Team/Organization Features** - Share assessments, permissions
+
+### Technical Debt
+- Add comprehensive error handling for edge cases
+- Add unit tests for core lib functions
+- Consider caching GitHub API responses

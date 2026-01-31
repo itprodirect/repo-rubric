@@ -46,3 +46,6 @@ tsconfig.tsbuildinfo
 
 # Generated files
 /app/generated/prisma
+
+
+**/.reporubric/**

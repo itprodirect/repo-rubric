@@ -37,6 +37,8 @@ export default function Home() {
     retryAfter: 0,
   });
   const [quickMode, setQuickMode] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Countdown timer for rate limit
   useEffect(() => {
@@ -75,6 +77,30 @@ export default function Home() {
       })
       .catch(console.error);
   }, []);
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Delete assessment for ${name}?`)) return;
+
+    try {
+      const response = await fetch(`/api/assessments/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete assessment");
+      }
+
+      setRecentAssessments((prev) => prev.filter((a) => a.id !== id));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert("Failed to delete assessment");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -259,50 +285,190 @@ export default function Home() {
         {/* Recent Assessments */}
         {recentAssessments.length > 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Recent Assessments
-            </h2>
-            <div className="space-y-3">
-              {recentAssessments.map((assessment) => (
-                <a
-                  key={assessment.id}
-                  href={`/report/${assessment.id}`}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Recent Assessments
+              </h2>
+              <div className="flex items-center gap-2">
+                {compareMode && selectedIds.size === 2 && (
+                  <button
+                    onClick={() => {
+                      const [a, b] = Array.from(selectedIds);
+                      router.push(`/compare?a=${a}&b=${b}`);
+                    }}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Compare Selected
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setCompareMode(!compareMode);
+                    setSelectedIds(new Set());
+                  }}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                    compareMode
+                      ? "bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
                 >
-                  <div className="flex items-center gap-3">
+                  {compareMode ? "Cancel" : "Compare"}
+                </button>
+              </div>
+            </div>
+            {compareMode && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                Select 2 assessments to compare ({selectedIds.size}/2 selected)
+              </p>
+            )}
+            <div className="space-y-3">
+              {recentAssessments.map((assessment) => {
+                const isSelected = selectedIds.has(assessment.id);
+                const canSelect = selectedIds.size < 2 || isSelected;
+
+                if (compareMode) {
+                  return (
                     <div
-                      className={`w-8 h-8 rounded-full ${
-                        CLASSIFICATION_COLORS[assessment.classification] ||
-                        "bg-gray-500"
-                      } flex items-center justify-center text-white text-sm font-bold`}
+                      key={assessment.id}
+                      onClick={() => {
+                        if (!canSelect && !isSelected) return;
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          if (isSelected) {
+                            next.delete(assessment.id);
+                          } else if (next.size < 2) {
+                            next.add(assessment.id);
+                          }
+                          return next;
+                        });
+                      }}
+                      className={`flex items-center justify-between p-4 rounded-lg transition-colors cursor-pointer ${
+                        isSelected
+                          ? "bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500"
+                          : canSelect
+                            ? "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                            : "bg-gray-50 dark:bg-gray-700 opacity-50 cursor-not-allowed"
+                      }`}
                     >
-                      {assessment.classification?.charAt(0) || "?"}
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            isSelected
+                              ? "bg-blue-600 border-blue-600"
+                              : "border-gray-300 dark:border-gray-500"
+                          }`}
+                        >
+                          {isSelected && (
+                            <svg
+                              className="w-3 h-3 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={3}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <div
+                          className={`w-8 h-8 rounded-full ${
+                            CLASSIFICATION_COLORS[assessment.classification] ||
+                            "bg-gray-500"
+                          } flex items-center justify-center text-white text-sm font-bold`}
+                        >
+                          {assessment.classification?.charAt(0) || "?"}
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            {assessment.owner}/{assessment.name}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {assessment.commitSha} &middot;{" "}
+                            {new Date(assessment.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-white">
-                        {assessment.owner}/{assessment.name}
+                  );
+                }
+
+                return (
+                  <div
+                    key={assessment.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors group"
+                  >
+                    <a
+                      href={`/report/${assessment.id}`}
+                      className="flex items-center gap-3 flex-1"
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-full ${
+                          CLASSIFICATION_COLORS[assessment.classification] ||
+                          "bg-gray-500"
+                        } flex items-center justify-center text-white text-sm font-bold`}
+                      >
+                        {assessment.classification?.charAt(0) || "?"}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {assessment.commitSha} &middot;{" "}
-                        {new Date(assessment.createdAt).toLocaleDateString()}
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">
+                          {assessment.owner}/{assessment.name}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {assessment.commitSha} &middot;{" "}
+                          {new Date(assessment.createdAt).toLocaleDateString()}
+                        </div>
                       </div>
+                    </a>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDelete(
+                            assessment.id,
+                            `${assessment.owner}/${assessment.name}`
+                          );
+                        }}
+                        className="p-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete assessment"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                      <a href={`/report/${assessment.id}`}>
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </a>
                     </div>
                   </div>
-                  <svg
-                    className="w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </a>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

@@ -4,11 +4,17 @@ import { RubricOutput, validateRubric } from "./validate";
 import { readFileSync } from "fs";
 import { join } from "path";
 
+const BASE_URL = process.env.OPENAI_BASE_URL;
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  baseURL: BASE_URL,
 });
 
 const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-2025-04-14";
+const IS_KIMI =
+  (BASE_URL || "").includes("moonshot") || MODEL.toLowerCase().startsWith("kimi-");
+const SUMMARIZE_TEMPERATURE = IS_KIMI ? 1 : 0.3;
+const RUBRIC_TEMPERATURE = IS_KIMI ? 1 : 0.2;
 
 export interface FileSummary {
   path: string;
@@ -88,7 +94,7 @@ Provide a brief summary and key findings.`;
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
     ],
-    temperature: 0.3,
+    temperature: SUMMARIZE_TEMPERATURE,
     max_tokens: 500,
   });
 
@@ -208,6 +214,7 @@ You analyze codebases to determine:
 
 You ALWAYS cite your sources using the provided citation IDs.
 You produce output in strict JSON format matching the provided schema.
+Return only valid JSON. Do not wrap in markdown or add extra text.
 
 ## Classification Scale
 - A_NOT_AGENTIC: Low variability, rules-based, minimal LLM value. Standard CRUD apps, ETL pipelines, static configs.
@@ -266,15 +273,19 @@ export async function runRubricAssessment(
       { role: "system", content: RUBRIC_SYSTEM_PROMPT },
       { role: "user", content: userPrompt },
     ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "rubric_assessment",
-        strict: true,
-        schema: schema,
-      },
-    },
-    temperature: 0.2,
+    ...(IS_KIMI
+      ? {}
+      : {
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "rubric_assessment",
+              strict: true,
+              schema: schema,
+            },
+          },
+        }),
+    temperature: RUBRIC_TEMPERATURE,
     max_tokens: 8000,
   });
 

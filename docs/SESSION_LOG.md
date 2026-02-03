@@ -285,6 +285,28 @@ The LLM was reading README marketing language and not verifying claims against a
 
 ---
 
+### Session 10: Kimi Compatibility
+**Date:** 2026-02-03
+**Tool:** Codex
+
+#### Completed
+- [x] Added `OPENAI_BASE_URL` support for OpenAI-compatible providers
+- [x] Added Kimi detection (base URL or model prefix)
+- [x] Enforced Kimi temperature requirement (`temperature = 1`)
+- [x] Disabled `response_format` for Kimi (JSON schema is OpenAI-specific)
+- [x] Updated documentation for Kimi usage and env vars
+ - [ ] First Kimi run (blocked by 401 Invalid Authentication)
+
+#### Files Modified
+- `lib/llm.ts` - Kimi detection, temperature handling, response_format gating
+- `.env.example` - Added `OPENAI_BASE_URL`, updated model comment
+- `README.md` - Kimi usage instructions and env vars
+
+#### Documentation
+- `docs/SESSION-2026-02-03-kimi-compat.md` - Full session writeup
+
+---
+
 ## Milestone Tracking
 
 | Milestone | Target | Actual | Status |

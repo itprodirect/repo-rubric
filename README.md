@@ -40,7 +40,7 @@ Open http://localhost:3000
 - Next.js 14 (App Router) + TypeScript
 - Prisma 7.x + SQLite (via libsql adapter)
 - Tailwind CSS
-- OpenAI API (Structured output with JSON schema)
+- OpenAI-compatible LLM API (OpenAI and Moonshot Kimi)
 - GitHub REST API (no cloning)
 
 ## Features
@@ -151,10 +151,24 @@ repo-rubric/
 ## Environment Variables
 
 ```env
-OPENAI_API_KEY=sk-...      # Required
-GITHUB_TOKEN=ghp_...       # Optional, increases rate limits (60 → 5000/hr)
-DATABASE_URL=file:./dev.db # SQLite path (via libsql)
+OPENAI_API_KEY=sk-...        # Required
+OPENAI_BASE_URL=             # Optional (e.g. https://api.moonshot.ai/v1)
+OPENAI_MODEL=                # Optional (default: gpt-4.1-2025-04-14)
+GITHUB_TOKEN=ghp_...         # Optional, increases rate limits (60 -> 5000/hr)
+DATABASE_URL=file:./dev.db   # SQLite path (via libsql)
 ```
+
+## Using Kimi (Moonshot)
+
+Set the OpenAI-compatible base URL and model:
+
+```env
+OPENAI_API_KEY=your-moonshot-key
+OPENAI_BASE_URL=https://api.moonshot.ai/v1
+OPENAI_MODEL=kimi-k2.5
+```
+
+Note: Kimi requires temperature = 1. The app enforces this automatically when using Kimi models.
 
 ## API Endpoints
 

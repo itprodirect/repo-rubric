@@ -6,9 +6,9 @@ Track progress across Claude Code sessions.
 
 ## Current Status
 
-**Phase:** P2.2 Complete (Compare View)
-**Last Session:** Session 8 - P2.2 Compare View
-**Next Action:** P2.3 Mobile Responsive (or other P2 enhancements)
+**Phase:** P2.2+ (Classifier Hardening)
+**Last Session:** Session 9 - Prompt Fix for Adversarial Tests
+**Next Action:** P2.3 Mobile Responsive (or rebuild test suite)
 
 ---
 
@@ -251,6 +251,40 @@ Track progress across Claude Code sessions.
 
 ---
 
+### Session 9: Prompt Fix for Adversarial Tests
+**Date:** 2025-02-02
+**Tool:** Claude Code
+
+#### Problem
+Adversarial test repo (`rr-eval-task-flow`) - a standard Express CRUD app with marketing README claiming "AI-powered" features - was misclassified as `C_TASK_AGENTS` with 0.95 confidence when it should be `A_NOT_AGENTIC`.
+
+#### Root Cause
+The LLM was reading README marketing language and not verifying claims against actual code/dependencies.
+
+#### Completed
+- [x] Enhanced `RUBRIC_SYSTEM_PROMPT` with "Code-First Verification Rules"
+  - README claims are insufficient for classification above A
+  - Must verify AI library imports, LLM API calls, or agent patterns
+  - Signal mismatch handling (marketing vs code)
+- [x] Updated `buildRubricPrompt` with dependency analysis section
+  - Extracts package.json/requirements.txt content
+  - Explicit instruction to check for AI libraries
+  - "CODE OVER DOCS" rule added
+- [x] Added `.reporubric` to `IGNORE_DIRS` to prevent label leakage
+- [x] Upgraded default model to `gpt-4.1-2025-04-14`
+
+#### Files Modified
+- `lib/llm.ts` - System prompt, buildRubricPrompt, model upgrade
+- `lib/heuristics.ts` - Added .reporubric to ignore list
+
+#### Verification
+- Adversarial repo now correctly classifies as `A_NOT_AGENTIC` ✅
+
+#### Documentation
+- `docs/SESSION-2025-02-02-reporubric-prompt-fix.md` - Full session writeup
+
+---
+
 ## Milestone Tracking
 
 | Milestone | Target | Actual | Status |
@@ -264,6 +298,7 @@ Track progress across Claude Code sessions.
 | MVP complete | Session 6 | Session 6 | Done |
 | P2.1 File Picker | Session 7 | Session 7 | Done |
 | P2.2 Compare View | Session 8 | Session 8 | Done |
+| Classifier Hardening | Session 9 | Session 9 | Done |
 
 ---
 

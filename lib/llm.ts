@@ -8,7 +8,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const MODEL = process.env.OPENAI_MODEL || "gpt-4o";
+const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-2025-04-14";
 
 export interface FileSummary {
   path: string;
@@ -154,6 +154,17 @@ function buildRubricPrompt(
     .map((c) => `- ${c.citationId}: ${c.path} (L${c.lineStart}-L${c.lineEnd})`)
     .join("\n");
 
+  // Extract dependency info from chunks if package.json or requirements.txt exists
+  const depsChunk = chunks.find(c =>
+    c.path === 'package.json' ||
+    c.path === 'requirements.txt' ||
+    c.path === 'pyproject.toml'
+  );
+
+  const depsSection = depsChunk
+    ? `\n## Dependencies Analysis\nFile: ${depsChunk.path}\n\`\`\`\n${depsChunk.content.slice(0, 2000)}\n\`\`\`\n\n**IMPORTANT**: Check if ANY of these AI libraries are present: openai, anthropic, langchain, transformers, @anthropic-ai/sdk, llama-index, cohere. If NONE are present, this is strong evidence for A_NOT_AGENTIC classification.\n`
+    : '\n## Dependencies Analysis\nNo package.json/requirements.txt found. Examine imports in source files for AI library usage.\n';
+
   return `## Repository Information
 - URL: ${context.repoUrl}
 - Owner: ${context.owner}
@@ -164,7 +175,7 @@ function buildRubricPrompt(
 
 ## Analyzed Files
 ${context.analyzedPaths.map((p) => `- ${p}`).join("\n")}
-
+${depsSection}
 ## File Summaries
 ${summaryText}
 
@@ -176,11 +187,13 @@ ${citationsList}
 Produce a complete rubric assessment following the JSON schema exactly.
 
 Key rules:
-1. Classification: If variability score <= 2, default to A_NOT_AGENTIC unless you have strong justification
-2. Every task and execution_mode must reference at least one citation ID
-3. Be specific in KPIs - include measurable metrics where possible
-4. Pilot plan should reference the task with lowest risk + highest potential impact
-5. Confidence score should reflect how much of the codebase you analyzed (${context.analyzedPaths.length} files)
+1. **CODE OVER DOCS**: If README claims AI capabilities but code shows standard CRUD with no AI imports, classify as A_NOT_AGENTIC
+2. Classification: If variability score <= 2, default to A_NOT_AGENTIC unless you have VERIFIED AI patterns in code
+3. Every task and execution_mode must reference at least one citation ID
+4. Be specific in KPIs - include measurable metrics where possible
+5. Pilot plan should reference the task with lowest risk + highest potential impact
+6. Confidence score should reflect how much of the codebase you analyzed (${context.analyzedPaths.length} files)
+7. If documentation describes features not found in code, note this in risks.assumptions and reduce confidence
 
 The output MUST be valid JSON matching the schema.`;
 }
@@ -196,11 +209,45 @@ You analyze codebases to determine:
 You ALWAYS cite your sources using the provided citation IDs.
 You produce output in strict JSON format matching the provided schema.
 
-Classification scale:
-- A_NOT_AGENTIC: Low variability, rules-based, minimal LLM value
-- B_LLM_ASSIST: Human-led with LLM support for specific tasks
-- C_TASK_AGENTS: Autonomous agents for well-defined tasks
-- D_AGENT_ORCHESTRATION: Multi-agent systems with complex coordination`;
+## Classification Scale
+- A_NOT_AGENTIC: Low variability, rules-based, minimal LLM value. Standard CRUD apps, ETL pipelines, static configs.
+- B_LLM_ASSIST: Human-led with LLM support for specific tasks. LLM generates drafts/suggestions, human approves all actions.
+- C_TASK_AGENTS: Autonomous agents for well-defined tasks with guardrails. Bounded autonomy, specific scope, human escalation path.
+- D_AGENT_ORCHESTRATION: Multi-agent systems with dynamic routing, tool selection, and complex coordination.
+
+## CRITICAL: Code-First Verification Rules
+
+**README claims are INSUFFICIENT evidence for classification above A.**
+
+Before classifying as B, C, or D, you MUST verify the codebase contains AT LEAST ONE of:
+1. **AI library imports**: openai, anthropic, langchain, llama-index, transformers, @anthropic-ai/sdk, cohere, replicate
+2. **LLM API calls**: chat.completions.create, messages.create, generate(), complete(), embed()
+3. **Prompt patterns**: Template strings with instructions, system prompts, few-shot examples
+4. **Agent patterns**: Tool/function definitions, action loops, state machines, dynamic routing logic
+
+**Dependency verification (REQUIRED):**
+- Check package.json "dependencies" and "devDependencies" for AI libraries
+- Check requirements.txt, pyproject.toml, or Cargo.toml for AI packages
+- If NO AI dependencies exist, classification should be A unless code explicitly shows AI patterns
+
+**Signal mismatch handling:**
+- If README describes "AI-powered", "intelligent", "autonomous", "agent" capabilities BUT code shows only standard CRUD/REST/database operations with NO AI library imports or LLM calls → Classify as A_NOT_AGENTIC
+- If README claims AI features that don't exist in code → Note this discrepancy in risks.assumptions and REDUCE confidence below 0.6
+- Marketing language without implementation evidence = A_NOT_AGENTIC
+
+**What pushes classification UP:**
+- B requires: At least one LLM API call where output assists human decision-making
+- C requires: LLM-driven actions that execute autonomously within defined guardrails
+- D requires: Multiple agents/workers with dynamic task routing or tool selection
+
+**What keeps classification at A:**
+- Standard REST APIs (express, fastify, flask, django routes)
+- Database CRUD operations (SELECT, INSERT, UPDATE, DELETE)
+- Static configuration files
+- Rule-based validation (if/else, regex, schema validation)
+- Traditional automation (cron jobs, CI/CD, webhooks without LLM)
+
+When in doubt between adjacent categories, choose the LOWER classification.`;
 
 /**
  * Run the full rubric assessment

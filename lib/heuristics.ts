@@ -15,6 +15,7 @@ const IGNORE_DIRS = new Set([
   ".git",
   ".cache",
   ".turbo",
+  ".reporubric",
 ]);
 
 // Ignore file extensions (binaries)
